@@ -120,7 +120,7 @@ dist
 # Vitepress
 docs/.vitepress/dist
 docs/.vitepress/cache
-yarn.lock
-bun.lockb
+#yarn.lock
+#bun.lockb
 /src/lib/
 .vscode
