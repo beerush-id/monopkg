@@ -36,7 +36,7 @@ features:
 
 ---
 
-<div class="flex-row my-huge">
+<div class="home-preview flex-row my-huge">
   <div class="flex-1 flex-row-center bg-soft">
     <pre>
       <code>
@@ -73,7 +73,7 @@ $ monopkg add -d eslint prettier typescript
     --vp-home-hero-image-filter: blur(44px);
   }
 
-  pre, code {
+  .home-preview pre, .home-preview code {
     display: flex;
     text-align: left;
     padding: 0;
