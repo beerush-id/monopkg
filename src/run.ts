@@ -10,9 +10,9 @@ const randomColor = (text: string, prefix?: string) => {
 
 export const runCmd = new Command()
   .configureHelp(configs)
-  .command('run <scripts...>')
+  .command('run.md <scripts...>')
   .description('Run a script in packages')
-  .option('-b, --before-run <scripts...>', 'Run scripts before the main script')
+  .option('-b, --before-run.md <scripts...>', 'Run scripts before the main script')
   .action(async (scripts) => {
     const { root, include, exclude } = options;
     const { beforeRun } = runCmd.opts();
@@ -24,7 +24,7 @@ export const runCmd = new Command()
 
     const packageColors = targetPackages.map((pkg) => ({
       name: pkg.name,
-      color: randomColor(pkg.path, '⚡')
+      color: randomColor(pkg.path, '⚡'),
     }));
 
     const run = async (scripts: string[]) => {
@@ -34,29 +34,25 @@ export const runCmd = new Command()
           const cwd = pkg.path;
           const cmdName = [
             packageColors.find((p) => p.name === pkg.name)?.color,
-            `${textStyle.grey('[')}${textStyle.green(script)}${textStyle.grey(']:')} `
+            `${textStyle.grey('[')}${textStyle.green(script)}${textStyle.grey(']:')} `,
           ].join('');
           const cmdPrefix = `${cwd}[${script}]`;
           const linePrefix = textStyle.padding(cmdPrefix);
-          const argText = [
-            textStyle.cyan(pm),
-            textStyle.yellow('run'),
-            textStyle.green(args.join(' '))
-          ].join(' ');
+          const argText = [textStyle.cyan(pm), textStyle.yellow('run'), textStyle.green(args.join(' '))].join(' ');
 
           console.log(`${cmdName}${argText}`);
 
           return new Promise((resolve, reject) => {
             const result = spawn(pm, ['run', ...args], {
               cwd,
-              stdio: ['inherit', 'pipe', 'pipe']
+              stdio: ['inherit', 'pipe', 'pipe'],
             });
 
             result.on('close', (code) => {
               if (code === 0) {
                 resolve('ok');
               } else {
-                reject(new Error('Failed to run script.'));
+                reject(new Error('Failed to run.md script.'));
               }
             });
 

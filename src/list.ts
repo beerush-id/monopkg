@@ -10,25 +10,23 @@ import {
   mainVersion,
   options,
   textStyle,
-  workspaces
+  workspaces,
 } from './core.js';
 
 export const listCmd = new Command()
   .configureHelp(configs)
   .command('list')
   .description('List packages')
-  .option('--public', 'Only list public packages')
-  .option('--private', 'Only list private packages')
-  .option('--restricted', 'Only list restricted packages')
-  .option('--publishable', 'Only list publishable packages')
+  .option('--public', 'Only list.md public packages')
+  .option('--private', 'Only list.md private packages')
+  .option('--restricted', 'Only list.md restricted packages')
+  .option('--publishable', 'Only list.md publishable packages')
   .action(async () => {
     const opts = listCmd.opts();
 
     console.log(`Packages in ${mainName} ${mainVersion}:\n`);
 
-    const usedWorkspaces = workspaces.filter((w) =>
-      options.root ? options.root.includes(w) : true
-    );
+    const usedWorkspaces = workspaces.filter((w) => (options.root ? options.root.includes(w) : true));
 
     for (const workspace of usedWorkspaces) {
       const packages = opts.public
