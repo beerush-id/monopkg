@@ -2,9 +2,9 @@
 
 Easily remove dependencies from all packages in your monorepo with a single command.
 
-## Command
+## Usage
 
-Use the following commands based on your package manager:
+This command allows you to remove dependencies from all packages in the monorepo at once.
 
 ::: code-group
 
@@ -26,13 +26,15 @@ yarn x @beerush/monopkg remove <package-name...> [global-options]
 
 :::
 
-## Global Options
+::: info Global Options
 
-Customize the command with these options:
+- **`-F`**, `--filter` - Include specific packages.
+- **`-E`**, `--exclude` - Exclude specific packages.
+- **`-R`**, `--root` - Root workspaces of the packages.
 
-- **`-i`**, `--include` - Include specific packages.
-- **`-e`**, `--exclude` - Exclude specific packages.
-- **`-r`**, `--root` - Specify the root workspace of the packages.
+See the [Global Options](../guides/usage#global-options) page for more details.
+
+:::
 
 ## Examples
 
@@ -67,19 +69,19 @@ Remove `lodash` and `typescript` from `package-a` and `package-b`:
 ::: code-group
 
 ```bash [Global]
-monopkg remove lodash typescript -i package-a package-b
+monopkg remove lodash typescript -F package-a package-b
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg remove lodash typescript -i package-a package-b
+bun x @beerush/monopkg remove lodash typescript -F package-a package-b
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg remove lodash typescript -i package-a package-b
+npx @beerush/monopkg remove lodash typescript -F package-a package-b
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg remove lodash typescript -i package-a package-b
+yarn x @beerush/monopkg remove lodash typescript -F package-a package-b
 ```
 
 :::
@@ -91,19 +93,19 @@ Remove `lodash` from all packages in the `apps` workspace:
 ::: code-group
 
 ```bash [Global]
-monopkg remove lodash -r apps
+monopkg remove lodash -R apps
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg remove lodash -r apps
+bun x @beerush/monopkg remove lodash -R apps
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg remove lodash -r apps
+npx @beerush/monopkg remove lodash -R apps
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg remove lodash -r apps
+yarn x @beerush/monopkg remove lodash -R apps
 ```
 
 :::

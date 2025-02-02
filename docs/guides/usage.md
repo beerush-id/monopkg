@@ -1,20 +1,27 @@
 # Usage
 
-To use **`MonoPKG`**, you need to have a monorepo with `workspaces` field in `package.json`. The `workspaces` field
-should contain an array of paths to the packages in the monorepo.
+To use **`MonoPKG`**, you need to have a project with `workspaces` field in the root level `package.json` file. The
+`workspaces` field should contain an array of paths to the packages in the monorepo.
 
-**Example:**
+::: details What is Workspace?
 
-::: code-group
+A workspace is a directory containing one or more packages. A package can be an app, library, or any other type of code
+that have its own `package.json`.
 
-```json [package.json]
-{
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
-}
-```
+> [!INFO] package.json
+> ```json
+> {
+>   "workspaces": [
+>     "apps/*",
+>     "packages/*"
+>   ]
+> }
+> ```
+
+You can also [convert](../references/add-space) an existing project into workspace.
+
+> [!INFO] Learn More
+> Check this section for more information about [workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
 
 :::
 
@@ -40,6 +47,12 @@ yarn x @beerush/monopkg [command] [options]
 
 :::
 
+::: tip Tips
+
+If you prefer, you can use the short alias `mpkg` instead of `monopkg` if MonoPKG is installed globally.
+
+:::
+
 ## Available Commands
 
 Here are the available commands in **`MonoPKG`**:
@@ -48,12 +61,15 @@ Here are the available commands in **`MonoPKG`**:
 |---------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
 | <nobr>[**`add`**](/references/add)</nobr>                     | Add dependencies to all packages, specific packages, specific pacakges in a workspace, etc.          |
 | <nobr>[**`add-script`**](/references/add-script)</nobr>       | Add a script to all packages, specific packages, specific pacakges in a workspace, etc.              |
+| <nobr>[**`add-space`**](/references/add-space)</nobr>         | Add a workspace to the monorepo.                                                                     |
 | <nobr>[**`create`**](/references/create)</nobr>               | Create a package from template in a workspace.                                                       |
+| <nobr>[**`info`**](/references/info)</nobr>                   | Print information about the monorepo and all packages.                                               |
 | <nobr>[**`init`**](/references/init)</nobr>                   | Initialize a basic package in a workspace.                                                           |
 | <nobr>[**`link`**](/references/link)</nobr>                   | Link dependencies to all packages, specific packages, specific pacakges in a workspace, etc.         |
 | <nobr>[**`list`**](/references/list)</nobr>                   | List all packages in the monorepo, all packages in a workspace, all public packages, etc.            |
 | <nobr>[**`remove`**](/references/remove)</nobr>               | Remove dependencies from all packages, specific packages, specific pacakges in a workspace, etc.     |
 | <nobr>[**`remove-script`**](/references/remove-script)</nobr> | Remove a script from all packages, specific packages, specific pacakges in a workspace, etc.         |
+| <nobr>[**`remove-space`**](/references/remove-space)</nobr>   | Remove workspace from the monorepo.                                                                  |
 | <nobr>[**`run`**](/references/run)</nobr>                     | Run a script in all packages, specific packages, specific pacakges in a workspace, etc.              |
 | <nobr>[**`unlink`**](/references/unlink)</nobr>               | Unlink dependencies from all packages, specific packages, specific pacakges in a workspace, etc.     |
 | <nobr>[**`use`**](/references/use)</nobr>                     | Link internal packages to another package, specific packages, specific pacakges in a workspace, etc. |
@@ -71,11 +87,11 @@ Global options are available for all commands. These options can be used to filt
 
 | Option      | Shortcut | Description                                       | Default      |
 |-------------|----------|---------------------------------------------------|--------------|
-| `--include` | `-i`     | Included packages to work with (space separated). | All          |
-| `--exclude` | `-e`     | Excluded packages to work with (space separated). | None         |
-| `--root`    | `-r`     | Root workspace of the packages.                   | `./packages` |
+| `--filter`  | `-F`     | Included packages to work with (space separated). | All          |
+| `--exclude` | `-E`     | Excluded packages to work with (space separated). | None         |
+| `--root`    | `-R`     | Root workspaces of the packages.                  | `./packages` |
 | `--help`    | `-h`     | Display help message                              |
-| `--version` | `-v`     | Display version number                            |
+| `--version` | `-V`     | Display version number                            |
 
 ::: tip Default Root
 

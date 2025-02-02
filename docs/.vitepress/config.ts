@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress';
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   base: '/monopkg/',
-  title: 'MonoPKG',
+  title: '⚡ MonoPKG',
   description: 'A simple, yet useful package manager for monorepos',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
@@ -37,13 +37,24 @@ export default defineConfig({
         items: [
           { text: 'Add Dependencies', link: '/references/add' },
           { text: 'Add Scripts', link: '/references/add-script' },
+          { text: 'Add Workspace', link: '/references/add-space' },
           { text: 'Create Package', link: '/references/create' },
           { text: 'Init Package', link: '/references/init' },
           { text: 'Link Dependencies', link: '/references/link' },
-          { text: 'List Packages', link: '/references/list.md' },
+          { text: 'List Packages', link: '/references/list' },
+          {
+            text: 'Package Info',
+            link: '/references/info',
+            items: [
+              { text: 'Get Info', link: '/references/info#get-information' },
+              { text: 'Set Info', link: '/references/info#set-information' },
+              { text: 'Delete Info', link: '/references/info#delete-information' },
+            ],
+          },
           { text: 'Remove Dependencies', link: '/references/remove' },
           { text: 'Remove Script', link: '/references/remove-script' },
-          { text: 'Run Scripts', link: '/references/run.md' },
+          { text: 'Remove Workspace', link: '/references/remove-space' },
+          { text: 'Run Scripts', link: '/references/run' },
           { text: 'Unlink Dependencies', link: '/references/unlink' },
           { text: 'Use Packages', link: '/references/use' },
           { text: 'Versioning', link: '/references/version' },

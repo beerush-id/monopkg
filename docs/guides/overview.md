@@ -1,16 +1,20 @@
 # Welcome to MonoPKG
 
-**MonoPKG** is your go-to CLI tool for managing monorepos effortlessly. It offers a suite of commands to handle dependencies, scripts, and package versions within a monorepo, making your development process smoother and more efficient. If you enjoy doing everything manually, skip it! It's not for you. 😅
+**MonoPKG** is your go-to CLI tool for managing monorepos effortlessly. It offers a suite of commands to handle
+dependencies, scripts, and package versions within a monorepo, making your development process smoother and more
+efficient. If you enjoy doing everything manually, skip it! It's not for you. 😅
 
 ::: tip Just Don't!
-**`MonoPKG`** isn't here to dethrone `turbo`, `nx`, `lerna`, or any other monorepo giants. It's your friendly neighborhood tool designed to make package management in a monorepo a breeze. So, no need for epic showdowns or comparisons. Just enjoy the simplicity! 🍺
+**`MonoPKG`** isn't here to dethrone `turbo`, `nx`, `lerna`, or any other monorepo giants. It's your friendly
+neighborhood tool designed to make package management in a monorepo a breeze. So, no need for epic showdowns or
+comparisons. Just enjoy the simplicity! 🍺
 :::
 
 ## Why Use MonoPKG?
 
 Imagine you have the following monorepo structure:
 
-::: info root
+::: details Your Awesome Monorepo
 
 ```plaintext
 ├─ apps
@@ -34,7 +38,7 @@ Imagine you have the following monorepo structure:
 
 Traditionally, adding a new dependency like `lodash` to all packages would require running multiple commands:
 
-::: info Manual
+::: details Multi Command Madness
 
 ```sh
 cd ./apps/app-a && bun add lodash
@@ -72,108 +76,212 @@ yarn x @beerush/monopkg add lodash
 
 :::
 
+::: info FYI
+
+Unlike the built-in tools such as `turbo --filter`, MonoPKG uses the folder name to filter the packages instead of the
+package name. This approach simplifies the process since you don't have to remember the package names, and you can see
+the folder name right in your editor.
+
+::: details Example
+
+```sh
+monopkg run clean -F app-a app-b
+```
+
+The above command runs `clean` command on `app-a` and `app-b` packages. With built-in tools, you would have to
+use the package name instead of the folder name.
+
+```sh
+turbo run clean --filter "@scope/app-a"
+```
+
+:::
+
 ### Adding Scripts
 
-Adding new scripts to each package manually can be a daunting task. MonoPKG makes it easy to add identical scripts across all packages with minimal effort.
+Adding new scripts to each package manually can be a daunting task. MonoPKG makes it easy to add identical scripts
+across all packages with minimal effort.
 
-::: tip
+::: info
 Avoid the hassle of editing each `package.json` file manually. Use MonoPKG to add scripts efficiently.
-:::
 
 ::: details Don't Look! 🥷
 
-::: code-group
-
-```sh [Global]
-monopkg add-script build "rimraf dist && tsup && publint" -r packages
+```sh
+monopkg add-script dev="tsup --watch" build="rimraf dist && tsup" -R packages
 ```
 
-```sh [Bun]
-bun x @beerush/monopkg add-script build "rimraf dist && tsup && publint" -r packages
-```
+The above command is equivalent to going through each package under `packages` folder and adding the script manually.
+It's a ninja move! 🥷
 
-```sh [NPM]
-npx @beerush/monopkg add-script build "rimraf dist && tsup && publint" -r packages
+```json
+{
+  "scripts": {
+    "dev": "tsup --watch",    // [!code ++]
+    "build": "rimraf dist && tsup"    // [!code ++]
+  }
+}
 ```
-
-```sh [Yarn]
-yarn x @beerush/monopkg add-script build "rimraf dist && tsup && publint" -r packages
-```
-
-The above command is equivalent to going through each package and adding the script manually. It's a ninja move! 🥷
 
 :::
 
 ### Linking Internal Packages
 
-Linking internal packages manually involves editing the `dependencies` field in the `package.json` file of the target package and running `bun install` or `npm install`. MonoPKG streamlines this process, reducing the risk of errors.
+Linking internal packages manually involves editing the `dependencies` field in the `package.json` file of the target
+package and run the `install` command. MonoPKG streamlines this process, reducing the risk of errors.
 
-::: tip
-Simplify the process of linking internal packages with MonoPKG and keep your monorepo organized.
+::: details Example
+
+> [!INFO] Command
+> ```sh [command]
+> monopkg use -S pkg-a pkg-b -F pkg-c pkg-d
+> ```
+> The above command links `pkg-a` and `pkg-b` to `pkg-c` and `pkg-d`, and add them to the `dependencies` field in
+> `package.json`. It's like magic! 🪄
+
+::: info Output
+
+::: code-group
+
+```json [pkg-c/package.json]
+{
+  "dependencies": {
+    "some": "^1.0.0",
+    "deps": "^1.0.0",
+    "@beerush/pkg-a": "workspace:*",  // [!code ++]
+    "@beerush/pkg-b": "workspace:*"   // [!code ++]
+  }
+}
+```
+
+```json [pkg-d/package.json]
+{
+  "dependencies": {
+    "some": "^1.0.0",
+    "deps": "^1.0.0",
+    "@beerush/pkg-a": "workspace:*",  // [!code ++]
+    "@beerush/pkg-b": "workspace:*"   // [!code ++]
+  }
+}
+```
+
 :::
 
 Experience the ease of managing your monorepo with MonoPKG and focus more on building great software!
 
 ## Key Features
 
-- ### Unified Dependency Management
+### Unified Dependency Management
 
-  Manage dependencies across all your packages with a single command. No more repetitive installations.
+Manage dependencies across all your packages with a single command. No more repetitive installations.
 
-  ::: info FYI
-  Working with small monorepos is easy, but as your project grows, managing dependencies can become a nightmare. MonoPKG simplifies this process, allowing you to focus on development.
-  :::
+::: info FYI
+Working with small monorepos is easy, but as your project grows, managing dependencies can become a nightmare. MonoPKG
+simplifies this process, allowing you to focus on development.
+:::
 
-- ### Simplified Package Creation
+[Learn more about managing dependencies with MonoPKG](../references/add.md)
 
-  Create new packages from templates within your monorepo with ease. Save time and effort on manual setups.
+### Consistent Scripts
 
-  ::: details FYI
-  Creating new packages manually is fine. But, I bet you'd rather spend your time coding than setting up new packages. MonoPKG helps you get started quickly.
-  :::
+Easily add and update scripts across all packages to ensure consistency and save time.
 
-- ### Streamlined Package Initialization
+::: info WHAT IF
 
-  Initialize basic packages in your monorepo quickly and efficiently. Get started on new projects without delay.
+You discovered a shiny new tool and want to update scripts in all packages? MonoPKG to the rescue! With a simple
+command, you can sprinkle that script magic across your entire monorepo.
 
-  ::: details FYI
-  I know, initializing package is not a big deal. But, why waste time on repetitive tasks when you can automate them? MonoPKG helps you get things done faster.
-  :::
+::: tip Example
 
-- ### Run Scripts Across Packages
+```json
+{
+  "scripts": {
+    "build": "rimraf dist && tsup && publint",
+    "clean": "rimraf dist"
+  }
+}
+```
 
-  Execute scripts in multiple packages simultaneously, ensuring consistency and saving time.
+You want to add `format` script to all packages and change the `build` script to include the `format` script.
 
-  ::: details FYI
-  Running scripts in each package manually can be time-consuming. With MonoPKG, you can run scripts across all packages in one go.
-  :::
+```sh
+monopkg add-script format "prettier --write ." -R packages
+monopkg add-script build "bun run format && rimraf dist && tsup && publint" -R packages
+```
 
-- ### Consistent Scripts
+The above command adds a `format` script and update the `build` script to all packages under the `packages` folder. It's
+that simple! 🪄
 
-  Easily add and update scripts across all packages to ensure consistency and save time.
+```json
+{
+  "scripts": {
+    "build": "bun run format && rimraf dist && tsup && publint", // [!code ++]
+    "clean": "rimraf dist",
+    "format": "prettier --write ." // [!code ++]
+  }
+}
+```
 
-  ::: details WHAT IF
-  You discovered a shiny new tool and want to update scripts in all packages? MonoPKG to the rescue! With just one command, you can sprinkle that script magic across your entire monorepo.
-  :::
+:::
 
-- ### Efficient Linking
+[Learn more about managing scripts with MonoPKG](../references/add-script.md)
 
-  Automatically link internal packages, reducing manual edits and potential errors.
+### Simplified Package Creation
 
-  ::: details FYI
-  I'm tired of editing `package.json` files and run `bun install` to link internal packages. MonoPKG makes it easy to link packages within your monorepo.
-  :::
+Create new packages from templates within your monorepo with ease. Save time and effort on manual setups.
 
-- ### Version Control
+::: info FYI
+Creating new packages manually is fine. But, I bet you'd rather spend your time coding than setting up new packages.
+MonoPKG helps you get started quickly.
+:::
 
-  Keep track of package versions effortlessly and ensure compatibility across your monorepo.
+[Learn more about creating packages with MonoPKG](../references/create.md)
 
-  ::: details hmmm...
-  My brain is currently on a coffee break. ☕️ Please hold while it recharges... or just enjoy the silence. 😴
-  :::
+### Streamlined Package Initialization
 
-- ### Enhanced Productivity
+Initialize basic packages in your monorepo quickly and efficiently. Get started on new projects without delay.
 
-  Focus on development rather than managing configurations and dependencies.
+::: info FYI
+I know, initializing package is not a big deal. But, why waste time on repetitive tasks when you can automate them?
+MonoPKG helps you get things done faster.
+:::
+
+[Learn more about initializing packages with MonoPKG](../references/init.md)
+
+### Run Scripts Across Packages
+
+Execute scripts in multiple packages simultaneously, ensuring consistency and saving time.
+
+::: info FYI
+Running scripts in each package manually can be time-consuming. With MonoPKG, you can run scripts across all packages
+in one go.
+:::
+
+[Learn more about running scripts with MonoPKG](../references/run.md)
+
+### Efficient Linking
+
+Automatically link internal packages, reducing manual edits and potential errors.
+
+::: info FYI
+I'm tired of editing `package.json` files and run `bun install` to link internal packages. MonoPKG makes it easy to
+link packages within your monorepo.
+:::
+
+[Learn more about linking packages with MonoPKG](../references/link.md)
+
+### Version Control
+
+Keep track of package versions effortlessly and ensure compatibility across your monorepo.
+
+::: info hmmm...
+My brain is currently on a coffee break. ☕️ Please hold while it recharges... or just enjoy the silence. 😴
+:::
+
+[Learn more about managing package versions with MonoPKG](../references/version.md)
+
+### Enhanced Productivity
+
+Focus on development rather than managing configurations and dependencies.
 
 Explore these features and more with MonoPKG to streamline your monorepo management!

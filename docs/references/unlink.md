@@ -1,109 +1,115 @@
 # Unlink Dependencies
 
-Easily unlink dependencies from all packages in your monorepo with a single command.
+This guides explains how to unlink dependencies from all packages in a monorepo.
 
-## Command
+## Usage
 
-Use the following commands based on your package manager:
+To unlink dependencies from all packages in the monorepo, use the following command:
 
 ::: code-group
 
 ```bash [Global]
-monopkg unlink <package-name...> [global-options]
+monopkg unlink <package-name...> [options] [global-options]
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg unlink <package-name...> [global-options]
+bun x @beerush/monopkg unlink <package-name...> [options] [global-options]
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg unlink <package-name...> [global-options]
+npx @beerush/monopkg unlink <package-name...> [options] [global-options]
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg unlink <package-name...> [global-options]
+yarn x @beerush/monopkg unlink <package-name...> [options] [global-options]
 ```
 
 :::
 
-### Global Options
+::: info Global Options
 
-Use these options to customize the unlink command:
+- **`-F`**, `--filter` - Include specific packages.
+- **`-E`**, `--exclude` - Exclude specific packages.
+- **`-R`**, `--root` - Root workspaces of the packages.
 
-- **`-i`**, `--include` - Include specific packages.
-- **`-e`**, `--exclude` - Exclude specific packages.
-- **`-r`**, `--root` - Specify the root workspace of the packages.
+See the [Global Options](../guides/usage#global-options) page for more details.
+
+:::
+
+## Options
+
+- `-S, --save` - Also remove the entry from the `package.json` file.
 
 ## Examples
 
-### Unlink a Single Package
+### Basic Usage
 
-Unlink `lodash` from all packages in the monorepo:
+Unlink `@beerush/utils` from all packages in the monorepo:
 
 ::: code-group
 
 ```bash [Global]
-monopkg unlink lodash
+monopkg unlink @beerush/utils
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg unlink lodash
+bun x @beerush/monopkg unlink @beerush/utils
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg unlink lodash
+npx @beerush/monopkg unlink @beerush/utils
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg unlink lodash
+yarn x @beerush/monopkg unlink @beerush/utils
 ```
 
 :::
 
-### Unlink Multiple Packages from Specific Packages
+### Using Filters
 
-Unlink `lodash` and `typescript` from `package-a` and `package-b`:
+Unlink `@beerush/utils` and `@beerush/ui` from `package-a` and `package-b`, and remove the entry from the `package.json` file:
 
 ::: code-group
 
 ```bash [Global]
-monopkg unlink lodash typescript -i package-a package-b
+monopkg unlink -S @beerush/utils @beerush/ui -F package-a package-b
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg unlink lodash typescript -i package-a package-b
+bun x @beerush/monopkg unlink -S @beerush/utils @beerush/ui -F package-a package-b
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg unlink lodash typescript -i package-a package-b
+npx @beerush/monopkg unlink -S @beerush/utils @beerush/ui -F package-a package-b
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg unlink lodash typescript -i package-a package-b
+yarn x @beerush/monopkg unlink -S @beerush/utils @beerush/ui -F package-a package-b
 ```
 
 :::
 
-### Unlink a Package from a Specific Workspace
+### Using Targeted Workspaces
 
-Unlink `lodash` from all packages in the `apps` workspace:
+Unlink `@beerush/utils` from all packages in the `apps` and `utils` workspaces:
 
 ::: code-group
 
 ```bash [Global]
-monopkg unlink lodash -r apps
+monopkg unlink @beerush/utils -R apps utils
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg unlink lodash -r apps
+bun x @beerush/monopkg unlink @beerush/utils -R apps utils
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg unlink lodash -r apps
+npx @beerush/monopkg unlink @beerush/utils -R apps utils
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg unlink lodash -r apps
+yarn x @beerush/monopkg unlink @beerush/utils -R apps utils
 ```
 
 :::

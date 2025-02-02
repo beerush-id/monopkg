@@ -1,23 +1,35 @@
 # Use Packages
 
-This command links internal packages to other packages within the monorepo. It also adds the dependencies to the `dependencies`, `devDependencies`, or `peerDependencies` field in each package's `package.json`.
+In a monorepo, it is common to link internal packages to other packages within the monorepo. This is especially useful
+when you are developing multiple packages that depend on each other.
 
-Unlike the `link` command, this command does not require you to link the target package globally first. It also adheres to the workspace configuration of the monorepo.
+Unlike the `link` command, this command does not require you to link the target package globally first. It also adheres
+to the workspace configuration of the monorepo.
 
-For example, a `@scope/package-name` will use `*` as the version in the `package.json` file, following the workspace configuration.
+::: info Example
 
-::: info
+In a Bun workspace, to use internal packages, we will use `workspace:*` as the version in the `package.json` file. For
+example:
+
+```json
+{
+  "dependencies": {
+    "@beerush/ui": "workspace:*"
+  }
+}
+```
 
 Under the hood, this command performs the following steps:
 
-1. Edits the `package.json` file of each package to include the specified packages as dependencies.
-2. Runs `bun install` (or the registered package manager) to link the packages.
+1. Edits the `package.json` file of each package to include the specified packages as dependencies by following the
+   workspace configuration.
+2. Runs the `install` command to link the packages.
 
 :::
 
-## Command
+## Usage
 
-Use the following commands based on your package manager:
+Use the following command to link internal packages to all packages in the monorepo:
 
 ::: code-group
 
@@ -39,71 +51,93 @@ yarn x @beerush/monopkg use <package-name> [global-options]
 
 :::
 
-::: info [Global Options](../guides/usage#global-options)
+::: info Global Options
 
-- **`-i`**, `--include` - Include specific packages.
-- **`-e`**, `--exclude` - Exclude specific packages.
-- **`-r`**, `--root` - Root workspace of the packages.
+- **`-F`**, `--filter` - Include specific packages.
+- **`-E`**, `--exclude` - Exclude specific packages.
+- **`-R`**, `--root` - Root workspaces of the packages.
+
+See the [Global Options](../guides/usage#global-options) page for more details.
 
 :::
 
-### Options
+## Options
 
-- `-s, --save` - Link as dependencies.
-- `-d, --dev` - Link as dev dependencies.
-- `-p, --peer` - Link as peer dependencies.
+- `-D, --dev` - Link as dev dependencies.
+- `-P, --peer` - Link as peer dependencies.
+
+::: info Note
+
+If you do not specify any options, the packages will be linked as dependencies.
+
+:::
 
 ## Examples
 
-**Use `@beerush/ui` in all packages in the monorepo.**
+### Basic Usage
+
+Use `ui` package in all packages in the monorepo.
 
 ::: code-group
 
 ```bash [Global]
-monopkg use @beerush/ui
+monopkg use ui
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg use @beerush/ui
+bun x @beerush/monopkg use ui
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg use @beerush/ui
+npx @beerush/monopkg use ui
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg use @beerush/ui
+yarn x @beerush/monopkg use ui
 ```
 
 :::
 
-::: details Alternative
+::: info Output
 
-The command above is equivalent to running the following commands for each package in the monorepo:
-
-- Edit the `package.json` file of each package to include `@beerush/ui` as a dependency.
-- Run `bun install` to link the package.
+```json
+{
+  "dependencies": {
+    "@beerush/ui": "workspace:*" // [!code ++]
+  }
+}
+```
 
 :::
 
-**Use `@beerush/ui` and `@beerush/core` as dev dependencies in `package-a` and `package-b`.**
+::: details Self Linking?
+
+Don't worry about linking the package to itself. The command will automatically exclude the package from the list of
+packages to link.
+
+:::
+
+
+### Advanced Usage
+
+Use `ui` and `core` packages as `devDependencies` in `app-a` and `util-b` packages under the `apps` and `utils` workspaces.
 
 ::: code-group
 
 ```bash [Global]
-monopkg use -d @beerush/ui @beerush/core -i package-a package-b
+monopkg use -D ui core -F app-a util-b -R apps utils
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg use -d @beerush/ui @beerush/core -i package-a package-b
+bun x @beerush/monopkg use -D ui core -F app-a util-b -R apps utils
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg use -d @beerush/ui @beerush/core -i package-a package-b
+npx @beerush/monopkg use -D ui core -F app-a util-b -R apps utils
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg use -d @beerush/ui @beerush/core -i package-a package-b
+yarn x @beerush/monopkg use -D ui core -F app-a util-b -R apps utils
 ```
 
 :::

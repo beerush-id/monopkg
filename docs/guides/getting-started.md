@@ -42,6 +42,9 @@ To run MonoPKG, you can use the following command:
 ```sh [Global]
 monopkg [command] [options]
 ```
+```sh [Alias]
+mpkg [command] [options]
+```
 
 :::
 

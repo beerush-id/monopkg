@@ -2,11 +2,11 @@
 
 A basic package is a simple package with a main file, without any template or configuration.
 
-::: info
-To create a package from a template, use the [`monopkg create`](./create) command.
+::: info Note
+To create a package using a template, use the [`monopkg create`](./create) command instead.
 :::
 
-## Command
+## Usage
 
 This command creates a basic package within a workspace.
 
@@ -30,107 +30,140 @@ yarn x @beerush/monopkg init <directory-name> [options] [global-options]
 
 :::
 
-::: info [Global Options](../guides/usage#global-options)
+::: info Global Options
 
-- **`-r`**, `--root` - Specifies the root workspace of the packages. Defaults to `packages` if not provided.
+- **`-R`**, `--root` - Root workspace of the new package (default: `./packages`).
+
+See the [Global Options](../guides/usage#global-options) page for more details.
 
 :::
 
-### Options
+## Options
 
-| Option                   | Alias | Argument                      | Description                                                     |
-|--------------------------|-------|-------------------------------|-----------------------------------------------------------------|
-| <nobr>`--name`</nobr>    | `-n`  | <nobr>`<package-name>`</nobr> | Sets the package name (default: `<directory-name>`).            |
-| <nobr>`--scope`</nobr>   | `-s`  | <nobr>`<scope-name>`</nobr>   | Sets the scope name (e.g., `beerush` for `@beerush/<package-name>`). |
-| <nobr>`--main`</nobr>    | `-m`  | <nobr>`<main-file>`</nobr>    | Specifies the main file of the package (default: `src/index.ts`). |
-| <nobr>`--version`</nobr> | `-v`  | <nobr>`<version>`</nobr>      | Sets the initial version of the package (default: `0.0.1`).     |
+- `-N`, `--name` - Sets the package name (default: `<directory-name>`).
+- `-S`, `--scope` - Sets the scope name (e.g., `beerush` for `@beerush/<package-name>`).
+- `-M`, `--main` - Specifies the main file of the package (default: `src/library.ts`).
+- `-V`, `--version` - Sets the initial version of the package (default: `0.0.1`).
 
 ## Examples
 
-1. **Create a new package named `my-package` (`./packages/my-package`).**
+### Basic Usage
 
-   ::: code-group
+Create a new package named `my-package`. The newly created package will be located in the `./packages/my-package` directory.
 
-    ```bash [Global]
-    monopkg init my-package
-    ```
+::: code-group
 
-    ```bash [Bun]
-    bun x @beerush/monopkg init my-package
-    ```
+```bash [Global]
+monopkg init my-package
+```
 
-    ```bash [NPM]
-    npx @beerush/monopkg init my-package
-    ```
+```bash [Bun]
+bun x @beerush/monopkg init my-package
+```
 
-    ```bash [Yarn]
-    yarn x @beerush/monopkg init my-package
-    ```
+```bash [NPM]
+npx @beerush/monopkg init my-package
+```
 
-   :::
+```bash [Yarn]
+yarn x @beerush/monopkg init my-package
+```
 
-2. **Create a new package named `@beerush/my-package` (`./packages/my-package`).**
+:::
 
-   ::: code-group
+### Custom Package Name
 
-    ```bash [Global]
-    monopkg init my-package -s beerush
-    ```
+Create a new package named `main-ui` in the `ui` directory. The newly created package will be located in the `./packages/ui` directory.
 
-    ```bash [Bun]
-    bun x @beerush/monopkg init my-package -s beerush
-    ```
+::: code-group
 
-    ```bash [NPM]
-    npx @beerush/monopkg init my-package -s beerush
-    ```
+```bash [Global]
+monopkg init ui -N main-ui
+```
 
-    ```bash [Yarn]
-    yarn x @beerush/monopkg init my-package -s beerush
-    ```
+```bash [Bun]
+bun x @beerush/monopkg init ui -N main-ui
+```
 
-   :::
+```bash [NPM]
+npx @beerush/monopkg init ui -N main-ui
+```
 
-3. **Create a new package named `my-package` with the main file `src/app.ts` (`./packages/my-package`).**
+```bash [Yarn]
+yarn x @beerush/monopkg init ui -N main-ui
+```
 
-   ::: code-group
+:::
 
-    ```bash [Global]
-    monopkg init my-package -m src/app.ts
-    ```
 
-    ```bash [Bun]
-    bun x @beerush/monopkg init my-package -m src/app.ts
-    ```
+### Scoped Package Name
 
-    ```bash [NPM]
-    npx @beerush/monopkg init my-package -m src/app.ts
-    ```
+Create a new package named `@beerush/my-package`. The newly created package will be located in the `./packages/my-package` directory.
 
-    ```bash [Yarn]
-    yarn x @beerush/monopkg init my-package -m src/app.ts
-    ```
+::: code-group
 
-   :::
+```bash [Global]
+monopkg init my-package -S beerush
+```
 
-4. **Create a new package named `@beerush/my-package` under the `apps` workspace (`./apps/my-package`).**
+```bash [Bun]
+bun x @beerush/monopkg init my-package -S beerush
+```
 
-   ::: code-group
+```bash [NPM]
+npx @beerush/monopkg init my-package -S beerush
+```
 
-    ```bash [Global]
-    monopkg init my-package -r apps -s beerush
-    ```
+```bash [Yarn]
+yarn x @beerush/monopkg init my-package -S beerush
+```
 
-    ```bash [Bun]
-    bun x @beerush/monopkg init my-package -r apps -s beerush
-    ```
+:::
 
-    ```bash [NPM]
-    npx @beerush/monopkg init my-package -r apps -s beerush
-    ```
+### Custom Main File
 
-    ```bash [Yarn]
-    yarn x @beerush/monopkg init my-package -r apps -s beerush
-    ```
+Create a new package named `my-package` with the main file `src/app.ts`. The newly created package will be located in the `./packages/my-package` directory.
 
-   :::
+::: code-group
+
+```bash [Global]
+monopkg init my-package -M src/app.ts
+```
+
+```bash [Bun]
+bun x @beerush/monopkg init my-package -M src/app.ts
+```
+
+```bash [NPM]
+npx @beerush/monopkg init my-package -M src/app.ts
+```
+
+```bash [Yarn]
+yarn x @beerush/monopkg init my-package -M src/app.ts
+```
+
+:::
+
+### Using Targeted Workspace
+
+Create a new package named `@beerush/my-package` under the `apps` workspace. The newly created package will be located in the `./apps/my-package` directory.
+
+::: code-group
+
+```bash [Global]
+monopkg init my-package -R apps -S beerush
+```
+
+```bash [Bun]
+bun x @beerush/monopkg init my-package -R apps -S beerush
+```
+
+```bash [NPM]
+npx @beerush/monopkg init my-package -R apps -S beerush
+```
+
+```bash [Yarn]
+yarn x @beerush/monopkg init my-package -R apps -S beerush
+```
+
+:::

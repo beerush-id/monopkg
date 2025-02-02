@@ -1,8 +1,8 @@
 # List Packages
 
-This document provides instructions on how to list all packages in the monorepo using different package managers.
+This document provides instructions on how to list all packages in the monorepo.
 
-## Command
+## Usage
 
 Use the following commands to list packages:
 
@@ -26,14 +26,17 @@ yarn x @beerush/monopkg list [options]
 
 :::
 
-::: info [Global Options](../guides/usage#global-options)
+::: info Global Options
 
-- **`-r`**, `--root` - Specify the root workspace of the packages. Defaults to `packages` if not specified.
+- **`-R`**, `--root` - Root workspaces of the packages.
+
+See the [Global Options](../guides/usage#global-options) page for more details.
 
 :::
 
 ## Options
 
+- **`-I`**, `--info` - Show information of the specified fields.
 - `--public` - Show only public packages.
 - `--private` - Show only private packages.
 - `--restricted` - Show only restricted packages.
@@ -41,7 +44,9 @@ yarn x @beerush/monopkg list [options]
 
 ## Examples
 
-### List all packages
+### Basic Usage
+
+List all packages in the monorepo.
 
 ::: code-group
 
@@ -63,7 +68,33 @@ yarn x @beerush/monopkg list
 
 :::
 
-### List all public packages
+### With Information
+
+List all packages and show package's `name`, `version`, and `type` fields.
+
+::: code-group
+
+```bash [Global]
+monopkg list --info name version type
+```
+
+```bash [Bun]
+bun x @beerush/monopkg list --info name version type
+```
+
+```bash [NPM]
+npx @beerush/monopkg list --info name version type
+```
+
+```bash [Yarn]
+yarn x @beerush/monopkg list --info name version type
+```
+
+:::
+
+### Public Packages
+
+List all public packages.
 
 ::: code-group
 
@@ -85,24 +116,42 @@ yarn x @beerush/monopkg list --public
 
 :::
 
-### List all packages under `apps` workspace
+### Advanced Usage
+
+List all `publishable` packages under `apps` workspace, and show package's `name`, and `version` fields.
 
 ::: code-group
 
 ```bash [Global]
-monopkg list -r apps
+monopkg list --publishable -R apps --info name version
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg list -r apps
+bun x @beerush/monopkg list --publishable -R apps --info name version
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg list -r apps
+npx @beerush/monopkg list --publishable -R apps --info name version
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg list -r apps
+yarn x @beerush/monopkg list --publishable -R apps --info name version
+```
+
+:::
+
+::: info Sample Output
+
+```bash
+Packages in @beerush/monoapp[v0.0.1]:
+
+- ⚡apps:
+  - <none>
+
+- ⚡utils:
+  - monopkg
+  ↪ name         : @beerush/monopkg
+  ↪ version      : 0.0.1
 ```
 
 :::

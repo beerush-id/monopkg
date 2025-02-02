@@ -31,9 +31,9 @@ yarn x @beerush/monopkg version <version> [global-options]
 :::
 
 ::: info [Global Options](../guides/usage#global-options)
-- **`-i`**, `--include` - Include specific packages.
-- **`-e`**, `--exclude` - Exclude specific packages.
-- **`-r`**, `--root` - Root workspace of the packages.
+- **`-F`**, `--filter` - Include specific packages.
+- **`-E`**, `--exclude` - Exclude specific packages.
+- **`-R`**, `--root` - Root workspace of the packages.
 :::
 
 ## Examples
@@ -109,19 +109,19 @@ yarn x @beerush/monopkg version major
 ::: code-group
 
 ```bash [Global]
-monopkg version patch -i package-a package-b
+monopkg version patch -F package-a package-b
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg version patch -i package-a package-b
+bun x @beerush/monopkg version patch -F package-a package-b
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg version patch -i package-a package-b
+npx @beerush/monopkg version patch -F package-a package-b
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg version patch -i package-a package-b
+yarn x @beerush/monopkg version patch -F package-a package-b
 ```
 
 :::

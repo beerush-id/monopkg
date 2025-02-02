@@ -1,10 +1,11 @@
 # Run Scripts
 
-Execute concurrent scripts across all packages in the monorepo simultaneously. This command is useful for running build, test, and other scripts in all packages at once.
+Execute concurrent scripts across all packages in the monorepo simultaneously. This command is useful for running build,
+test, and other scripts in all packages at once.
 
-## Command
+## Usage
 
-This command runs scripts concurrently across all packages in the monorepo.
+Use the following command to run scripts in all packages:
 
 ::: code-group
 
@@ -26,29 +27,31 @@ yarn x @beerush/monopkg run <scripts...> [global-options]
 
 :::
 
-## Global Options
+::: info Global Options
 
-::: info [Global Options](../guides/usage#global-options)
+- **`-F`**, `--filter` - Include specific packages.
+- **`-E`**, `--exclude` - Exclude specific packages.
+- **`-R`**, `--root` - Root workspaces of the packages.
 
-- **`-i`**, `--include` - Include specific packages.
-- **`-e`**, `--exclude` - Exclude specific packages.
-- **`-r`**, `--root` - Specify the root workspace of the packages.
+See the [Global Options](../guides/usage#global-options) page for more details.
 
 :::
 
-### Additional Options
+## Options
 
-- `-b, --before-run <scripts...>` - Execute scripts before the main script.
+- `-B, --before-run <scripts...>` - Execute scripts before the main script.
 
-::: info
+::: info Note
 
-The `before-run` scripts will run on all packages before executing the main scripts in each package.
+The `before-run` scripts will run on the specified packages before executing the main scripts in each package.
 
 :::
 
 ## Examples
 
-### Run `build` script in all packages
+### Basic Usage
+
+Run `build` script in all packages
 
 ::: code-group
 
@@ -70,90 +73,74 @@ yarn x @beerush/monopkg run build
 
 :::
 
-### Run `clean` script before `build` script in all packages
+### Using Before Run Scripts
+
+Run `clean` script before `build` script in all packages
 
 ::: code-group
 
 ```bash [Global]
-monopkg run build -b clean
+monopkg run build --before-run clean
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg run build -b clean
+bun x @beerush/monopkg run build --before-run clean
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg run build -b clean
+npx @beerush/monopkg run build --before-run clean
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg run build -b clean
+yarn x @beerush/monopkg run build --before-run clean
 ```
 
 :::
 
-### Run `dev:esm` and `dev:cjs` scripts in the `tools` workspace
+### Using Targeted Workspaces
+
+Run `dev:esm` and `dev:cjs` scripts in the `apps` and `tools` workspaces.
 
 ::: code-group
 
 ```bash [Global]
-monopkg run dev:esm dev:cjs -r tools
+monopkg run dev:esm dev:cjs -R apps tools
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg run dev:esm dev:cjs -r tools
+bun x @beerush/monopkg run dev:esm dev:cjs -R apps tools
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg run dev:esm dev:cjs -r tools
+npx @beerush/monopkg run dev:esm dev:cjs -R apps tools
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg run dev:esm dev:cjs -r tools
+yarn x @beerush/monopkg run dev:esm dev:cjs -R apps tools
 ```
 
 :::
 
-### Run `test` script in `package-a` and `package-b`
+### Using Filters
+
+Run `test` script in `package-a` and `package-b`
 
 ::: code-group
 
 ```bash [Global]
-monopkg run test -i package-a package-b
+monopkg run test -F package-a package-b
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg run test -i package-a package-b
+bun x @beerush/monopkg run test -F package-a package-b
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg run test -i package-a package-b
+npx @beerush/monopkg run test -F package-a package-b
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg run test -i package-a package-b
-```
-
-:::
-
-### Run `lint` script in the `apps` workspace
-
-::: code-group
-
-```bash [Global]
-monopkg run lint -r apps
-```
-
-```bash [Bun]
-bun x @beerush/monopkg run lint -r apps
-```
-
-```bash [NPM]
-npx @beerush/monopkg run lint -r apps
-```
-
-```bash [Yarn]
-yarn x @beerush/monopkg run lint -r apps
+yarn x @beerush/monopkg run test -F package-a package-b
 ```
 
 :::

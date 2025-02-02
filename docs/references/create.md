@@ -1,8 +1,8 @@
-# Create Package from Template
+# Create Package Using Template
 
 In a monorepo, you may need to create new packages from templates to streamline the development process. By using the `monopkg create` command, you can quickly generate new packages with predefined configurations and structures. This not only saves time but also ensures consistency across your packages, making it easier to maintain and scale your monorepo.
 
-## Command
+## Usage
 
 This command allows you to create a new package from a template.
 
@@ -26,116 +26,115 @@ yarn x @beerush/monopkg create <template-name> [options] [global-options]
 
 :::
 
-::: info [Global Options](../guides/usage#global-options)
+::: info Global Options
 
-- **`-r`**, `--root` - Root workspace of the packages. If not specified, the default workspace is `packages`.
+- **`-R`**, `--root` - Root workspace of the new package (default: `./packages`).
+
+See the [Global Options](../guides/usage#global-options) page for more details.
 
 :::
 
-### Options
+## Options
 
-- **`-n <package-name>`**, **`--name <package-name>`** - Package name.
-- **`-p <package-path>`**, **`--path <package-path>`** - Path to the package directory.
-- **`-v <version>`**, **`--version <version>`** - Initial version of the package (default: `0.0.1`).
+- **`-N`**, **`--name`** - Package name.
+- **`-O`**, **`--out`** - Path to the package directory.
+- **`-V`**, **`--version`** - Initial version of the package (default: `0.0.1`).
 
-::: tip Package Name
+::: info Package Name
 Some templates such as `vite` share the same package name and folder name. If you want to create a package with a scoped name (e.g., `@beerush/ui`) in `./packages/ui`, you need to manually edit the `package.json` file after the package is created.
 
-With the `-n` or `--name` option, you can specify the package name when creating the package, but the folder name will remain as is, so you don't need to manually edit the `package.json` file.
+With the `--name` option, you can specify the package name when creating the package, but the folder name will remain as is, so you don't need to manually edit the `package.json` file.
 :::
 
-::: tip Template Path
-Some template simply put the project files in the current directory, so you need to create a new directory before creating the package.
+::: info Template Path
+Some template simply put the project files in the current directory, so you need to create a new directory and `cd` to it before creating the package.
 
-With the `-p` or `--path` option, you can specify the path to the package directory when creating the package, so you don't need to create a new directory manually.
+With the `--out` option, you can specify the path to the package directory when creating the package, so you don't need to create a new directory manually.
 :::
 
 ## Examples
 
-1. **Create a new package named `my-package` from `vite` template (`./packages/my-package`).**
+### Basic Usage
 
-   ::: code-group
+Create a new package named `my-package` using `vite` template. The new package will be created in the `packages` workspace (`./packages/my-package`).
 
-   ```bash [Global]
-   monopkg create vite -n my-package
-   ```
+::: code-group
 
-   ```bash [Bun]
-   bun x @beerush/monopkg create vite -n my-package
-   ```
+```bash [Global]
+monopkg create vite -N my-package
+```
 
-   ```bash [NPM]
-   npx @beerush/monopkg create vite -n my-package
-   ```
+```bash [Bun]
+bun x @beerush/monopkg create vite -N my-package
+```
 
-   ```bash [Yarn]
-   yarn x @beerush/monopkg create vite -n my-package
-   ```
+```bash [NPM]
+npx @beerush/monopkg create vite -N my-package
+```
 
-   :::
+```bash [Yarn]
+yarn x @beerush/monopkg create vite -N my-package
+```
 
-   ::: details Alternative
+:::
 
-   The command above is equivalent to running the following commands:
+### Special Format
 
-   1. Run `cd ./packages`.
-   2. Run `npx create-vite`.
+Create a new package named `@beerush/ui` using a special format. The new package will be created in the `packages` workspace (`./packages/ui`).
 
-   :::
+::: code-group
 
-2. **Create a new package named `@beerush/ui` from a special format (`./packages/ui`).**
+```bash [Global]
+monopkg create sv-create -N @beerush/ui
+```
 
-   Some template using `npx {template-name} create` format, so we can use this command to work with them.
-   For example, svelte template now using `npx sv create`.
+```bash [Bun]
+bun x @beerush/monopkg create sv-create -N @beerush/ui
+```
 
-   ::: code-group
+```bash [NPM]
+npx @beerush/monopkg create sv-create -N @beerush/ui
+```
 
-   ```bash [Global]
-   monopkg create sv-create -n @beerush/ui
-   ```
+```bash [Yarn]
+yarn x @beerush/monopkg create sv-create -N @beerush/ui
+```
 
-   ```bash [Bun]
-   bun x @beerush/monopkg create sv-create -n @beerush/ui
-   ```
+:::
 
-   ```bash [NPM]
-   npx @beerush/monopkg create sv-create -n @beerush/ui
-   ```
+::: info Note
 
-   ```bash [Yarn]
-   yarn x @beerush/monopkg create sv-create -n @beerush/ui
-   ```
+Some template using `npx {template-name} create` format, so we can use this command to work with them.
+For example, svelte template now using `npx sv create`.
 
-   :::
+The command above is equivalent to:
 
-   ::: details Alternative
+1. Run `cd ./packages`.
+2. Run `npx sv create`.
+3. Edit the `package.json` file to change the package name to `@beerush/ui`.
 
-   The command above is equivalent to:
+:::
 
-   1. Run `cd ./packages`.
-   2. Run `npx sv create`.
-   3. Edit the `package.json` file to change the package name to `@beerush/ui`.
+### Advanced Usage
 
-   :::
+Create a new package named `@beerush/test` version `1.0.0` in `test-pkg` folder in `apps` workspace (`./apps/test-pkg`).
 
-3. **Create a new package named `@beerush/test` in a specific path (`./packages/test-pkg`).**
+::: code-group
 
-   ::: code-group
+```bash [Global]
+monopkg create vite -R apps -O test-pkg -N @beerush/test -V "1.0.0"
+```
 
-   ```bash [Global]
-   monopkg create vite -n @beerush/test -p test-pkg
-   ```
+```bash [Bun]
+bun x @beerush/monopkg create vite -R apps -O test-pkg -N @beerush/test -V "1.0.0"
+```
 
-   ```bash [Bun]
-   bun x @beerush/monopkg create vite -n @beerush/test -p test-pkg
-   ```
+```bash [NPM]
+npx @beerush/monopkg create vite -R apps -O test-pkg -N @beerush/test -V "1.0.0"
+```
 
-   ```bash [NPM]
-   npx @beerush/monopkg create vite -n @beerush/test -p test-pkg
-   ```
+```bash [Yarn]
+yarn x @beerush/monopkg create vite -R apps -O test-pkg -N @beerush/test -V "1.0.0"
+```
 
-   ```bash [Yarn]
-   yarn x @beerush/monopkg create vite -n @beerush/test -p test-pkg
-   ```
-
-   :::
+:::

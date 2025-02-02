@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "name": "@beerush/monopkg",
+  "name": "monopkg",
   "version": "0.0.1",
   "description": "A simple, yet useful monorepo package manager",
   "module": "dist/index.js",
@@ -11,7 +11,9 @@
     }
   },
   "bin": {
-    "monopkg": "bin/monopkg.js"
+    "monopkg": "bin/monopkg.js",
+    "mpkg": "bin/monopkg.js",
+    "bpkg": "bin/bpkg.js"
   },
   "files": [
     "bin",
@@ -25,6 +27,7 @@
     "dev": "rimraf dist && tsup --watch",
     "build": "rimraf dist && tsup",
     "clean": "rimraf dist",
+    "format": "prettier --write ./src",
     "prepublish": "rimraf dist && tsup && publint",
     "docs:dev": "vitepress dev docs --port 3636",
     "docs:build": "vitepress build docs",
@@ -34,6 +37,8 @@
     "access": "public"
   },
   "dependencies": {
+    "@beerush/utils": "^0.4.0",
+    "@clack/prompts": "^0.9.1",
     "commander": "^13.1.0"
   },
   "devDependencies": {

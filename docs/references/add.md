@@ -1,10 +1,15 @@
-# Installing Dependencies
+# Adding Dependencies
 
-In a monorepo, you may have multiple packages that share common dependencies. To avoid installing the same dependencies multiple times, you can use the `monopkg add` command to install dependencies for all packages in the monorepo at once. This not only saves time but also ensures consistency across your packages.
+In a monorepo, you may have multiple packages that share common dependencies. To avoid installing the same dependencies
+multiple times, you can use the `monopkg add` command to install dependencies for all packages in the monorepo at once.
+This not only saves time but also ensures consistency across your packages.
 
-By using the `monopkg add` command, you can specify various options to tailor the installation process to your needs. For instance, you can include or exclude specific packages, install dependencies as dev or peer dependencies, and even target specific workspaces within your monorepo. This flexibility allows you to manage your dependencies efficiently and keep your project organized.
+By using the `monopkg add` command, you can specify various options to tailor the installation process to your needs.
+For instance, you can include or exclude specific packages, install dependencies as dev or peer dependencies, and even
+target specific workspaces within your monorepo. This flexibility allows you to manage your dependencies efficiently and
+keep your project organized.
 
-## Command
+## Usage
 
 This command allows you to install dependencies for all packages in the monorepo at once.
 
@@ -28,204 +33,265 @@ yarn x @beerush/monopkg add [options] <dependencies...> [global-options]
 
 :::
 
-::: info [Global Options](../guides/usage#global-options)
+::: info Global Options
 
-- **`-i`**, `--include` - Include specific packages.
-- **`-e`**, `--exclude` - Exclude specific packages.
-- **`-r`**, `--root` - Root workspace of the packages.
+- **`-F`**, `--filter` - Include specific packages.
+- **`-E`**, `--exclude` - Exclude specific packages.
+- **`-R`**, `--root` - Root workspaces of the packages.
+
+See the [Global Options](../guides/usage#global-options) page for more details.
 
 :::
 
-### Options
+## Options
 
-- **`-d`**, `--dev` - Install as dev dependencies.
-- **`-p`**, `--peer` - Install as peer dependencies.
+- **`-D`**, `--dev` - Install as dev dependencies.
+- **`-P`**, `--peer` - Install as peer dependencies.
 
 ## Examples
 
-1. **Add `lodash` to all packages in the monorepo.**
+### Basic Usage
 
-   ::: code-group
+Add `lodash` to all packages in the monorepo.
 
-   ```bash [Global]
-   monopkg add lodash
-   ```
+::: code-group
 
-   ```bash [Bun]
-   bun x @beerush/monopkg add lodash
-   ```
+```bash [Global]
+monopkg add lodash
+```
 
-   ```bash [NPM]
-   npx @beerush/monopkg add lodash
-   ```
+```bash [Bun]
+bun x @beerush/monopkg add lodash
+```
 
-   ```bash [Yarn]
-   yarn x @beerush/monopkg add lodash
-   ```
+```bash [NPM]
+npx @beerush/monopkg add lodash
+```
 
-   :::
+```bash [Yarn]
+yarn x @beerush/monopkg add lodash
+```
 
-   ::: details Alternative
-   The command above is equivalent to running the following commands for each package in the monorepo:
+:::
 
-   - `cd ./packages/pkg-a && bun add lodash`
-   - `cd ./packages/pkg-b && bun add lodash`
-   - `cd ./packages/pkg-c && bun add lodash`
-   - `cd ./packages/pkg-d && bun add lodash`
-   - _and so on_.
-     :::
+::: details Comparison
 
-2. **Add `lodash` to `package-a` and `package-b`.**
+The command above is equivalent to running the following commands for each package in the monorepo:
 
-   ::: code-group
+- `cd ./packages/pkg-a && bun add lodash`
+- `cd ./packages/pkg-b && bun add lodash`
+- `cd ./packages/pkg-c && bun add lodash`
+- `cd ./packages/pkg-d && bun add lodash`
+- _and so on_.
 
-   ```bash [Global]
-   monopkg add lodash -i package-a package-b
-   ```
+:::
 
-   ```bash [Bun]
-   bun x @beerush/monopkg add lodash -i package-a package-b
-   ```
+::: details Output
 
-   ```bash [NPM]
-   npx @beerush/monopkg add lodash -i package-a package-b
-   ```
+::: code-group
 
-   ```bash [Yarn]
-   yarn x @beerush/monopkg add lodash -i package-a package-b
-   ```
+```json [package-a/package.json]
+{
+  "dependencies": {
+    "lodash": "^4.17.21",    // [!code ++]
+    "some-package": "^1.0.0"
+  }
+}
+```
 
-   :::
+```json [package-b/package.json]
+{
+  "dependencies": {
+    "lodash": "^4.17.21",    // [!code ++]
+    "some-package": "^1.0.0"
+  }
+}
+```
 
-   ::: details Alternative
-   The command above is equivalent to running the following commands:
+```json [...rest of the packages]
+{
+  "dependencies": {
+    "lodash": "^4.17.21",    // [!code ++]
+    "some-package": "^1.0.0"
+  }
+}
+```
 
-   - `cd ./packages/package-a && bun add lodash`
-   - `cd ./packages/package-b && bun add lodash`
-     :::
+:::
 
-3. **Add `lodash` and `typescript` as dev dependencies to all packages in the monorepo.**
+### With Inclusion Filters
 
-   ::: code-group
+Add `lodash` to `package-a` and `package-b`.
 
-   ```bash [Global]
-   monopkg add -d lodash typescript
-   ```
+::: code-group
 
-   ```bash [Bun]
-   bun x @beerush/monopkg add -d lodash typescript
-   ```
+```bash [Global]
+monopkg add lodash -F package-a package-b
+```
 
-   ```bash [NPM]
-   npx @beerush/monopkg add -d lodash typescript
-   ```
+```bash [Bun]
+bun x @beerush/monopkg add lodash -F package-a package-b
+```
 
-   ```bash [Yarn]
-   yarn x @beerush/monopkg add -d lodash typescript
-   ```
+```bash [NPM]
+npx @beerush/monopkg add lodash -F package-a package-b
+```
 
-   :::
+```bash [Yarn]
+yarn x @beerush/monopkg add lodash -F package-a package-b
+```
 
-   ::: details Alternative
-   The command above is equivalent to running the following commands for each package in the monorepo:
+:::
 
-   - `cd ./packages/pkg-a && bun add -d lodash typescript`
-   - `cd ./packages/pkg-b && bun add -d lodash typescript`
-   - `cd ./packages/pkg-c && bun add -d lodash typescript`
-   - `cd ./packages/pkg-d && bun add -d lodash typescript`
-   - _and so on_.
-     :::
+::: details Comparison
 
-4. **Add `lodash` and `typescript` as peer dependencies to all packages in the monorepo, except `package-a`.**
+The command above is equivalent to running the following commands:
 
-   ::: code-group
+- `cd ./packages/package-a && bun add lodash`
+- `cd ./packages/package-b && bun add lodash`
 
-   ```bash [Global]
-   monopkg add -p lodash typescript -e package-a
-   ```
+:::
 
-   ```bash [Bun]
-   bun x @beerush/monopkg add -p lodash typescript -e package-a
-   ```
+### With Target Environments
 
-   ```bash [NPM]
-   npx @beerush/monopkg add -p lodash typescript -e package-a
-   ```
+Add `lodash` and `typescript` as `devDependencies` to all packages in the monorepo.
 
-   ```bash [Yarn]
-   yarn x @beerush/monopkg add -p lodash typescript -e package-a
-   ```
+::: code-group
 
-   :::
+```bash [Global]
+monopkg add -D lodash typescript
+```
 
-   ::: details Alternative
-   The command above is equivalent to running the following commands for each package in the monorepo, except `package-a`:
+```bash [Bun]
+bun x @beerush/monopkg add -D lodash typescript
+```
 
-   - `cd ./packages/pkg-b && bun add -p lodash typescript`
-   - `cd ./packages/pkg-c && bun add -p lodash typescript`
-   - `cd ./packages/pkg-d && bun add -p lodash typescript`
-   - _and so on_.
-     :::
+```bash [NPM]
+npx @beerush/monopkg add -D lodash typescript
+```
 
-5. **Add `lodash` to all packages in the `apps` workspace.**
+```bash [Yarn]
+yarn x @beerush/monopkg add -D lodash typescript
+```
 
-   ::: code-group
+:::
 
-   ```bash [Global]
-   monopkg add lodash -r apps
-   ```
+::: details Comparison
 
-   ```bash [Bun]
-   bun x @beerush/monopkg add lodash -r apps
-   ```
+The command above is equivalent to running the following commands for each package in the monorepo:
 
-   ```bash [NPM]
-   npx @beerush/monopkg add lodash -r apps
-   ```
+- `cd ./packages/pkg-a && bun add -D lodash typescript`
+- `cd ./packages/pkg-b && bun add -D lodash typescript`
+- `cd ./packages/pkg-c && bun add -D lodash typescript`
+- `cd ./packages/pkg-d && bun add -D lodash typescript`
+- _and so on_.
 
-   ```bash [Yarn]
-   yarn x @beerush/monopkg add lodash -r apps
-   ```
+:::
 
-   :::
+### With Exclusion Filters
 
-   ::: details Alternative
-   The command above is equivalent to running the following commands for each package in the `apps` workspace:
+Add `lodash` and `typescript` as `peerDependencies` to all packages in the monorepo, except `package-a`.
 
-   - `cd ./apps/app-a && bun add lodash`
-   - `cd ./apps/app-b && bun add lodash`
-   - `cd ./apps/app-c && bun add lodash`
-   - `cd ./apps/app-d && bun add lodash`
-   - _and so on_.
-     :::
+::: code-group
 
-6. **Add `lodash` to all packages in the `apps` workspace, except `package-a`.**
+```bash [Global]
+monopkg add -P lodash typescript -E package-a
+```
 
-   ::: code-group
+```bash [Bun]
+bun x @beerush/monopkg add -P lodash typescript -E package-a
+```
 
-   ```bash [Global]
-   monopkg add lodash -r apps -e package-a
-   ```
+```bash [NPM]
+npx @beerush/monopkg add -P lodash typescript -E package-a
+```
 
-   ```bash [Bun]
-   bun x @beerush/monopkg add lodash -r apps -e package-a
-   ```
+```bash [Yarn]
+yarn x @beerush/monopkg add -P lodash typescript -E package-a
+```
 
-   ```bash [NPM]
-   npx @beerush/monopkg add lodash -r apps -e package-a
-   ```
+:::
 
-   ```bash [Yarn]
-   yarn x @beerush/monopkg add lodash -r apps -e package-a
-   ```
+::: details Comparison
 
-   :::
+The command above is equivalent to running the following commands for each package in the monorepo, except
+`package-a`:
 
-   ::: details Alternative
-   The command above is equivalent to running the following commands for each package in the `apps` workspace, except `package-a`:
+- `cd ./packages/pkg-b && bun add -P lodash typescript`
+- `cd ./packages/pkg-c && bun add -P lodash typescript`
+- `cd ./packages/pkg-d && bun add -P lodash typescript`
+- _and so on_.
 
-   - `cd ./apps/app-b && bun add lodash`
-   - `cd ./apps/app-c && bun add lodash`
-   - `cd ./apps/app-d && bun add lodash`
-   - _and so on_.
-     :::
+:::
+
+### With Target Workspaces
+
+Add `lodash` to all packages in the `apps` workspace.
+
+::: code-group
+
+```bash [Global]
+monopkg add lodash -R apps
+```
+
+```bash [Bun]
+bun x @beerush/monopkg add lodash -R apps
+```
+
+```bash [NPM]
+npx @beerush/monopkg add lodash -R apps
+```
+
+```bash [Yarn]
+yarn x @beerush/monopkg add lodash -R apps
+```
+
+:::
+
+::: details Comparison
+
+The command above is equivalent to running the following commands for each package in the `apps` workspace:
+
+- `cd ./apps/app-a && bun add lodash`
+- `cd ./apps/app-b && bun add lodash`
+- `cd ./apps/app-c && bun add lodash`
+- `cd ./apps/app-d && bun add lodash`
+- _and so on_.
+
+:::
+
+### Advanced Usage
+
+Add `eslint` and `typesript` as `devDependencies` to all packages in the `apps` and `utils` workspaces, except `app-a` and `util-a`.
+
+::: code-group
+
+```bash [Global]
+monopkg add -D eslint typescript -R apps utils -E app-a util-a
+```
+
+```bash [Bun]
+bun x @beerush/monopkg add -D eslint typescript -R apps utils -E app-a util-a
+```
+
+```bash [NPM]
+npx @beerush/monopkg add -D eslint typescript -R apps utils -E app-a util-a
+```
+
+```bash [Yarn]
+yarn x @beerush/monopkg add -D eslint typescript -R apps utils -E app-a util-a
+```
+
+:::
+
+::: details Comparison
+
+The command above is equivalent to running the following commands:
+
+- `cd ./apps/app-b && bun add -D eslint typescript`
+- `cd ./apps/app-c && bun add -D eslint typescript`
+- `cd ./apps/app-d && bun add -D eslint typescript`
+- `cd ./utils/util-b && bun add -D eslint typescript`
+- `cd ./utils/util-c && bun add -D eslint typescript`
+
+:::

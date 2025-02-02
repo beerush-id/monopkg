@@ -2,7 +2,7 @@
 
 In some cases, you may want to link local dependencies outside the monorepo to all packages within the monorepo.
 
-## Command
+## Usage
 
 Use the following command to link dependencies to all packages in the monorepo simultaneously.
 
@@ -26,11 +26,21 @@ yarn x @beerush/monopkg link [options] <dependencies...> [global-options]
 
 :::
 
-### Options
+::: info Global Options
 
-- `-s, --save` - Link as dependencies.
-- `-d, --dev` - Link as dev dependencies.
-- `-p, --peer` - Link as peer dependencies.
+- **`-F`**, `--filter` - Include specific packages.
+- **`-E`**, `--exclude` - Exclude specific packages.
+- **`-R`**, `--root` - Root workspaces of the packages.
+
+See the [Global Options](../guides/usage#global-options) page for more details.
+
+:::
+
+## Options
+
+- **`-S`**, `--save` - Link as dependencies.
+- **`-D`**, `--dev` - Link as dev dependencies.
+- **`-P`**, `--peer` - Link as peer dependencies.
 
 ::: info
 If no option is provided, the dependencies will not be added to the `package.json` file.
@@ -43,41 +53,41 @@ Link `@beerush/utils` to all packages in the monorepo.
 ::: code-group
 
 ```bash [Global]
-monopkg link -s @beerush/utils
+monopkg link -S @beerush/utils
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg link -s @beerush/utils
+bun x @beerush/monopkg link -S @beerush/utils
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg link -s @beerush/utils
+npx @beerush/monopkg link -S @beerush/utils
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg link -s @beerush/utils
+yarn x @beerush/monopkg link -S @beerush/utils
 ```
 
 :::
 
-Link `@beerush/utils` and `@beerush/core` as dev dependencies to `package-a` and `package-b`.
+Link `@beerush/utils` and `@beerush/core` as `devDependencies` to `package-a` and `package-b`.
 
 ::: code-group
 
 ```bash [Global]
-monopkg link -d @beerush/utils @beerush/core -i package-a package-b
+monopkg link -D @beerush/utils @beerush/core -F package-a package-b
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg link -d @beerush/utils @beerush/core -i package-a package-b
+bun x @beerush/monopkg link -D @beerush/utils @beerush/core -F package-a package-b
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg link -d @beerush/utils @beerush/core -i package-a package-b
+npx @beerush/monopkg link -D @beerush/utils @beerush/core -F package-a package-b
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg link -d @beerush/utils @beerush/core -i package-a package-b
+yarn x @beerush/monopkg link -D @beerush/utils @beerush/core -F package-a package-b
 ```
 
 :::

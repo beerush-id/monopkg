@@ -2,7 +2,7 @@
 
 Easily remove a script from all packages in your monorepo with a single command.
 
-## Command
+## Usage
 
 Use the following commands to remove a script:
 
@@ -26,15 +26,15 @@ yarn x @beerush/monopkg remove-script <script-name> [global-options]
 
 :::
 
-## Global Options
+::: info Global Options
 
-You can customize the command with the following options:
+- **`-F`**, `--filter` - Include specific packages.
+- **`-E`**, `--exclude` - Exclude specific packages.
+- **`-R`**, `--root` - Root workspaces of the packages.
 
-- **`-i`**, `--include` - Include specific packages.
-- **`-e`**, `--exclude` - Exclude specific packages.
-- **`-r`**, `--root` - Specify the root workspace of the packages.
+See the [Global Options](../guides/usage#global-options) page for more details.
 
-For more details, refer to the [Global Options](../guides/usage#global-options) section.
+:::
 
 ## Examples
 

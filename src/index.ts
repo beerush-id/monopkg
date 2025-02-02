@@ -1,36 +1,67 @@
 import { program } from 'commander';
-import * as process from 'node:process';
-import { configs } from './core.js';
-import { versionCmd } from './version.js';
-import { initCmd } from './init.js';
-import { addCmd, removeCmd } from './add.js';
-import { linkCmd, unlinkCmd } from './link.js';
-import { listCmd } from './list.js';
-import { useCmd } from './use.js';
+import { configs } from './cli/config.js';
+import { versionCmd } from './cli/version.js';
+import { addCmd, removeCmd } from './cli/dependency.js';
+import { linkCmd, unlinkCmd } from './cli/link.js';
+import { listCmd } from './cli/list.js';
+import { attachCmd, detachCmd } from './core/attach.js';
 import { runCmd } from './run.js';
-import { createCmd } from './create.js';
-import { addScriptCmd, removeScriptCmd } from './add-script.js';
+import { createCmd } from './cli/package.js';
+import { scriptCmd } from './cli/script.js';
+import { infoCmd } from './cli/info.js';
+import { workspaceCmd } from './cli/workspace.js';
+import { library } from './core/index.js';
+import process from 'node:process';
+import { initCmd } from './cli/init.js';
+import { render, shouldTired } from './utils/common.js';
+import { yellow } from './utils/color.js';
+import { sleep } from '@beerush/utils';
 
 program
   .configureHelp(configs)
   .name('monopkg')
-  .version('0.0.1')
   .description('A simple, yet useful package manager for monorepos.')
-  .option('-r, --root <root>', 'Root workspace (default: all workspaces)')
-  .option('-i, --include <packages...>', 'Included packages (default: all)')
-  .option('-e, --exclude <packages...>', 'Excluded packages');
+  .usage('<command> [options]')
+  .helpOption('-h, --help', 'Show usage information.')
+  .version(`0.0.1`, '-v, --version', 'Output the current version.');
 
 program
   .addCommand(addCmd)
-  .addCommand(addScriptCmd)
+  .addCommand(attachCmd)
   .addCommand(createCmd)
+  .addCommand(detachCmd)
+  .addCommand(infoCmd)
   .addCommand(initCmd)
   .addCommand(linkCmd)
-  .addCommand(listCmd)
+  .addCommand(listCmd, { isDefault: true })
   .addCommand(removeCmd)
-  .addCommand(removeScriptCmd)
   .addCommand(runCmd)
-  .addCommand(useCmd)
+  .addCommand(scriptCmd)
   .addCommand(unlinkCmd)
   .addCommand(versionCmd)
-  .parse(process.argv);
+  .addCommand(workspaceCmd);
+
+export async function main() {
+  if (shouldTired()) {
+    render(yellow(`I'm not in the mood to work atm. 😴`));
+    await sleep(2000);
+    render(yellow(`Kidding! 😄\n`));
+  }
+
+  if (process.argv.find((arg) => ['-h', '-H', 'help', '--help', '-v', '-V', '--version'].includes(arg))) {
+    program.parse();
+    return;
+  }
+
+  const isInit = process.argv.includes('init');
+  if (!isInit) {
+    await library.init(isInit);
+  } else {
+    library.status = 'ready';
+  }
+
+  if (library.status === 'ready') {
+    library.load();
+    program.parse();
+  }
+}
