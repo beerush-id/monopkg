@@ -1,9 +1,8 @@
 import { Command } from 'commander';
-import { configs } from './config.js';
-
-import { column, icon, inline, render, renderCol, renderLine, txt } from '../utils/common.js';
-import { intro, isCancel, multiselect, outro, tasks, text } from '@clack/prompts';
-import { cyan, green, grey, pink, red } from '../utils/color.js';
+import { caption, configs } from './program.js';
+import { column, icon, inline, section, txt } from '../utils/common.js';
+import { isCancel, multiselect, tasks, text } from '@clack/prompts';
+import { cyan, green, grey } from '../utils/color.js';
 import { library } from '../core/index.js';
 
 export const workspaceCmd = new Command()
@@ -22,7 +21,7 @@ const addCmd = new Command()
 
     workspaceIntro();
 
-    renderLine([txt('').lineTree(), txt(' Add workspaces to the project.').grey().bullet()]);
+    section.print([txt('').lineTree(), txt('Add workspaces to the project.').grey().bullet()]);
 
     const addSpace = async () => {
       const name = await text({
@@ -51,12 +50,12 @@ const addCmd = new Command()
     };
 
     if (!workspaces.length) {
-      render(txt(' Press Enter without value when finished.').darkGrey().lineTree());
+      inline.print(txt('Press Enter without value when finished.').darkGrey().lineTree());
       await addSpace();
     }
 
     if (!workspaces.length) {
-      return outro(red('No workspaces added.'));
+      return caption.cancel('No workspaces added.');
     }
 
     await tasks([
@@ -72,7 +71,7 @@ const addCmd = new Command()
 
     const newSpaces = library.findSpace(...workspaces);
     for (const space of newSpaces) {
-      render(
+      inline.print(
         column([
           txt(` ${icon(space.name)}`)
             .color(space.color)
@@ -82,7 +81,7 @@ const addCmd = new Command()
       );
     }
 
-    outro(green('Setup complete!'));
+    caption.success('Workspaces added to the project.');
   });
 
 workspaceCmd.addCommand(addCmd);
@@ -96,10 +95,10 @@ const listCmd = new Command()
     const { recursive } = listCmd.opts();
     workspaceIntro();
 
-    renderLine([txt('').lineTree(), txt(' Workspaces in the project:').grey().bullet()]);
+    section.print([txt('').lineTree(), txt('Workspaces in the project:').grey().bullet()]);
 
     for (const space of library.workspaces) {
-      renderCol([
+      column.print([
         txt(` ${icon(space.name)}`)
           .color(space.color)
           .tree(),
@@ -109,17 +108,17 @@ const listCmd = new Command()
 
       if (recursive) {
         if (!space.packages.length) {
-          renderCol([txt(' <empty>').darkGrey().tree(1)]);
+          column.print([txt('<empty>').darkGrey().tree(1)]);
           continue;
         }
 
         for (const pkg of space.packages) {
-          renderCol([txt(` ${pkg.base}`).color(pkg.color).tree(1), cyan(pkg.name), grey(`(${pkg.path})`)]);
+          column.print([txt(` ${pkg.base}`).color(pkg.color).tree(1), cyan(pkg.name), grey(`(${pkg.path})`)]);
         }
       }
     }
 
-    outro(column([grey('Listing done!')]));
+    caption.success('Listing done!');
   });
 
 workspaceCmd.addCommand(listCmd);
@@ -131,7 +130,7 @@ const removeCmd = new Command()
   .action(async (workspaces: string[] = []) => {
     workspaceIntro();
 
-    renderLine([txt('').lineTree(), txt(' Remove workspaces from the project.').grey().bullet()]);
+    section.print([txt('').lineTree(), txt('Remove workspaces from the project.').grey().bullet()]);
 
     if (!workspaces.length) {
       const result = (await multiselect({
@@ -143,13 +142,13 @@ const removeCmd = new Command()
       })) as string[];
 
       if (isCancel(result)) {
-        return outro(red('Workspace removal cancelled.'));
+        return caption.cancel('Workspace removal cancelled.');
       }
 
       workspaces.push(...result);
 
       if (!workspaces.length) {
-        return outro(red('No workspaces removed.'));
+        return caption.cancel('No workspaces selected.');
       }
     }
 
@@ -163,7 +162,7 @@ const removeCmd = new Command()
       },
     ]);
     for (const space of workspaces) {
-      renderCol([
+      column.print([
         txt(` ${icon(space)}`)
           .red()
           .tree(),
@@ -171,17 +170,17 @@ const removeCmd = new Command()
       ]);
     }
 
-    renderLine([
+    section.print([
       txt('').lineTree(),
-      txt(' You need to manually remove these directories:').yellow().bullet(),
+      txt('You need to manually remove these directories:').yellow().bullet(),
       ...workspaces.map((space) => txt(` ./${space}`).green().tree()),
     ]);
 
-    outro(green('Workspace removal complete!'));
+    caption.success('Workspace removal complete!');
   });
 
 workspaceCmd.addCommand(removeCmd);
 
 const workspaceIntro = () => {
-  intro(column([grey('Welcome to the'), pink('MonoPKG'), grey('workspace manager!')]));
+  caption.welcome('workspace manager!');
 };

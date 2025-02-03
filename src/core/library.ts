@@ -9,7 +9,7 @@ import {
   newLine,
   normalize,
   render,
-  renderLine,
+  section,
   setCtx,
   shouldAngry,
   txt,
@@ -19,8 +19,9 @@ import { LIBRARIES, LIBRARY_PACKAGES, LIBRARY_WORKSPACES, type Package } from '.
 import { Workspace } from './workspace.js';
 import type { LibraryConfigs, ProjectResolve, QueryOptions } from './shared.js';
 import { setupProject } from './setup.js';
-import { cyan, darkGrey, green, grey, lightGreen, red, yellow } from '../utils/color.js';
-import { isCancel, multiselect, outro } from '@clack/prompts';
+import { cyan, darkGrey, green, grey, lightGreen, yellow } from '../utils/color.js';
+import { isCancel, multiselect } from '@clack/prompts';
+import { caption } from '../cli/program.js';
 
 export class Library {
   public id = crypto.randomUUID();
@@ -92,7 +93,7 @@ export class Library {
 
     if (!isInit && !info.lastMeta) {
       newLine();
-      renderLine([
+      section.print([
         yellow('▢ OUT OF PROJECT SCOPE'),
         column([txt('INFO:').indent(1).blue(), green('https://beerush-id.github.io/monopkg/guides/usage.html')]),
       ]);
@@ -107,12 +108,12 @@ export class Library {
 
     if (!isInit && !info.meta) {
       newLine();
-      renderLine([
+      section.print([
         yellow('▢ OUT OF ROOT WORKSPACE'),
         column([txt('INFO:').indent(1).blue(), green('https://beerush-id.github.io/monopkg/guides/usage.html')]),
       ]);
       newLine();
-      renderLine([
+      section.print([
         txt(' Current project:').green().beginTree(),
         column([txt(' name:').grey().tree(), cyan(info.lastMeta?.name ?? 'Unknown')]),
         column([txt(' version:').grey().tree(), yellow('v' + (info.lastMeta?.version ?? '0.0.1'))]),
@@ -347,14 +348,6 @@ export type SelectOptions = QueryOptions & {
   isHidden?: (pkg: Package) => boolean;
 };
 
-const cancelSelect = (message?: string) =>
-  render(
-    txt(message ?? 'Setup cancelled.')
-      .padding(1)
-      .red()
-      .endTree()
-  );
-
 export async function selectPackages(library: Library, options: SelectOptions) {
   const { filter: include = [], exclude = [], subTitle } = options;
   let { root = [] } = options;
@@ -422,7 +415,7 @@ export async function selectPackages(library: Library, options: SelectOptions) {
       });
 
       if (isCancel(result)) {
-        return cancelSelect(options.cancelMessage);
+        return caption.cancel(options.cancelMessage);
       }
 
       if (result.join() === 'all') {
@@ -439,15 +432,15 @@ export async function selectPackages(library: Library, options: SelectOptions) {
 
     if (!filter.length) {
       if (shouldAngry()) {
-        renderLine([
+        section.print([
           txt('').lineTree(),
           txt(' Come on! You gotta be kidding me!').red().lineTree(),
           txt(` You think I'm a God who can read your mind? I'm watching you! 😒`).red().lineTree(),
         ]);
 
-        outro(red('Pfft! 😒 2lwsjfiwoeiwru ewoiru2o3u4oi 2roksajflsakj'));
+        caption.error('Pfft! 😒 2lwsjfiwoeiwru ewoiru2o3u4oi 2roksajflsakj');
       } else {
-        outro(grey('No packages selected. Nothing to do.'));
+        caption.cancel('No packages selected. Nothing to do.');
       }
 
       return;

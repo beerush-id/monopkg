@@ -3,7 +3,7 @@
 layout: home
 
 title: 'Monorepo Package Manager'
-titleTemplate: ⚡ MonoPKG
+titleTemplate: ▩ MonoPKG
 
 hero:
   name: 'MonoPKG'
@@ -18,7 +18,7 @@ hero:
       link: /guides/overview
 
   image:
-    src: /assets/monopkg-hero.svg
+    src: /hero.jpg
     alt: MonoPKG Hero Image
 
 features:

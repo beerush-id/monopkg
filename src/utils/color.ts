@@ -56,6 +56,7 @@ export const white = (text: string) => colorize(text, 'WHITE');
 export const yellow = (text: string) => colorize(text, 'YELLOW');
 
 export function highlight(text: string) {
+  const quoted = text.startsWith('"') && text.endsWith('"');
   text = text.replace(/^"/, '').replace(/"$/, '');
 
   const segments = text.split('&&').map((segment) => {
@@ -79,5 +80,5 @@ export function highlight(text: string) {
     return column(parts);
   });
 
-  return inline([darkGrey('"'), segments.join(darkGrey(' && ')), darkGrey('"')]);
+  return inline([quoted ? darkGrey('"') : '', segments.join(darkGrey(' && ')), quoted ? darkGrey('"') : '']);
 }

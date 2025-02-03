@@ -1,13 +1,13 @@
 import { Command } from 'commander';
-import { configs } from './config.js';
+import { caption, configs } from './program.js';
 import { mkdirSync, renameSync } from 'node:fs';
-import { column, icon, newLine, render, renderCol, txt } from '../utils/common.js';
+import { column, icon, inline, newLine, txt } from '../utils/common.js';
 import { shell } from '../utils/shell.js';
 import { listPointers, type PackageMeta, readMeta, writeMeta } from '../core/meta.js';
 import { library, Workspace } from '../core/index.js';
 import { join } from 'node:path';
 import { blue, cyan, darkGrey, green, grey, red, yellow } from '../utils/color.js';
-import { intro, isCancel, outro, select } from '@clack/prompts';
+import { isCancel, select } from '@clack/prompts';
 import { setupPackage } from '../core/template.js';
 
 const colorMap = [yellow, cyan, green, blue, cyan, cyan, cyan, cyan, cyan, cyan, cyan];
@@ -24,7 +24,7 @@ export const createCmd = new Command()
   .action(async (template: string) => {
     if (!library.workspaces.length) return;
 
-    intro(column([grey('Welcome to the'), txt('MonoPKG').pink(), grey('package setup wizard!')]));
+    caption.welcome('package setup wizard!');
 
     let { root } = createCmd.opts();
     if (typeof root === 'string') {
@@ -51,17 +51,17 @@ export const createCmd = new Command()
     const space: Workspace = library.getSpace({ root }) as Workspace;
 
     if (root && !space) {
-      renderCol([red('ERROR_ROOT: Workspace'), green(root), red('not found.')]);
+      column.print([red('ERROR_ROOT: Workspace'), green(root), red('not found.')]);
 
-      render(grey('Available workspaces:'));
+      inline.print(grey('Available workspaces:'));
 
       library.workspaces.forEach((space, i) => {
         const label = txt(icon(space.name)).color(space.color);
 
         if (i === library.workspaces.length - 1) {
-          render(label.endTree(0));
+          inline.print(label.endTree(0));
         } else {
-          render(label.tree(0));
+          inline.print(label.tree(0));
         }
       });
 
@@ -76,7 +76,7 @@ export const createCmd = new Command()
     });
 
     if (!result) {
-      return outro(green('All set!'));
+      return;
     }
 
     const outPath = result.path;
@@ -87,17 +87,17 @@ export const createCmd = new Command()
     const existing = library.get(outName) ?? library.get(outPath);
 
     if (existing) {
-      renderCol([red('ERROR_EXIST: Package'), green(outName), red('already exists:')]);
-      renderCol([txt('Name').green().tree(0), darkGrey(':'), green(existing.name)]);
-      renderCol([txt('Version').green().tree(0), darkGrey(':'), yellow(`v${existing.version}`)]);
-      renderCol([txt('Location').green().endTree(0), darkGrey(':'), cyan(existing.path)]);
+      column.print([red('ERROR_EXIST: Package'), green(outName), red('already exists:')]);
+      column.print([txt('Name').green().tree(0), darkGrey(':'), green(existing.name)]);
+      column.print([txt('Version').green().tree(0), darkGrey(':'), yellow(`v${existing.version}`)]);
+      column.print([txt('Location').green().endTree(0), darkGrey(':'), cyan(existing.path)]);
 
       return;
     }
 
-    outro(green('Preparation complete. Creating package...'));
+    caption.success('Preparation complete. Creating package...');
 
-    render([
+    inline.print([
       txt(icon(space.name)).color(space.color),
       darkGrey('/'),
       cyan(`${outPath}`),
@@ -109,7 +109,7 @@ export const createCmd = new Command()
     ]);
 
     if (cwd) {
-      renderCol([grey('- If prompted, use this as location:'), green('.')]);
+      column.print([grey('- If prompted, use this as location:'), green('.')]);
 
       mkdirSync(workDir, { recursive: true });
     }
@@ -117,7 +117,7 @@ export const createCmd = new Command()
     const pointers = listPointers(join(library.path, space.path));
 
     newLine();
-    render(
+    inline.print(
       [result.command, ...result.args].map((arg, i) => {
         if (arg.startsWith('--')) {
           return grey(arg);
@@ -132,7 +132,7 @@ export const createCmd = new Command()
       await shell(result.command, result.args, { cwd: workDir });
     } catch (err) {
       if (err instanceof Error) {
-        render([red('Cancelled.')]);
+        inline.print([red('Cancelled.')]);
       }
     }
 
@@ -167,7 +167,7 @@ export const createCmd = new Command()
         writeMeta(pointer.path, meta);
       }
 
-      render([
+      inline.print([
         txt(icon(space.name)).color(space.color),
         darkGrey('/'),
         cyan(`${pointer.base}`),
@@ -178,7 +178,7 @@ export const createCmd = new Command()
         darkGrey(']'),
       ]);
 
-      render(green('Package created. Installing dependencies...'));
+      inline.print(green('Package created. Installing dependencies...'));
       newLine();
 
       await shell(library.pm, ['install'], { cwd: library.path });

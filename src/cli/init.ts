@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { configs } from './config.js';
+import { configs } from './program.js';
 import { setupProject } from '../core/setup.js';
 
 export const initCmd = new Command()

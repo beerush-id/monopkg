@@ -2,8 +2,9 @@ import { confirm, isCancel, select, text } from '@clack/prompts';
 import { basename } from 'node:path';
 import { library } from './index.js';
 import { getExeCommand } from './pm.js';
-import { column, inline, render, txt } from '../utils/common.js';
+import { column, txt } from '../utils/common.js';
 import { Color, cyan, green, purple } from '../utils/color.js';
+import { caption } from '../cli/program.js';
 
 export enum PromptType {
   TEXT = 'text',
@@ -321,7 +322,7 @@ export type CreateAppOptions = {
   name?: string;
 };
 
-const cancelSetup = () => render([txt(' Setup cancelled.').red().bullet(0, Color.RED)]);
+const cancelSetup = () => caption.cancel('Setup cancelled.');
 
 export const validate = {
   path: (path?: string) => {

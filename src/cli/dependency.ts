@@ -1,22 +1,21 @@
 import { Command } from 'commander';
-import { addSharedOptions, configs } from './config.js';
-import { column, render, renderLine, section, txt } from '../utils/common.js';
-import { intro, isCancel, outro, select, tasks } from '@clack/prompts';
-import { green, grey, pink, red } from '../utils/color.js';
+import { addSharedOptions, caption, configs, exec, runTask } from './program.js';
+import { column, inline, section, txt } from '../utils/common.js';
+import { isCancel, select } from '@clack/prompts';
+import { grey, highlight, yellow } from '../utils/color.js';
 import { library, Package, type QueryOptions, selectPackages } from '../core/index.js';
 import { join } from 'node:path';
 import { getPmArgs } from '../core/pm.js';
-import { spawnSync } from 'node:child_process';
 import { actionLabelMaps } from '../core/meta.js';
 
 export const addCmd = new Command()
   .configureHelp(configs)
   .command('add <dependencies...>')
   .usage('<dependencies...> [options]')
-  .summary('Add dependencies to packages')
-  .option('-d, --dev', 'Add as dev dependencies')
-  .option('-p, --peer', 'Add as peer dependencies')
-  .option('-o, --optional', 'Add as optional dependencies')
+  .summary('Add dependencies to packages.')
+  .option('-d, --dev', 'Add as dev dependencies.')
+  .option('-p, --peer', 'Add as peer dependencies.')
+  .option('-o, --optional', 'Add as optional dependencies.')
   .description(
     section([
       grey('Add dependencies to one or more packages. You will be prompted to select:'),
@@ -34,7 +33,7 @@ export const removeCmd = new Command()
   .configureHelp(configs)
   .command('remove <dependencies...>')
   .usage('<dependencies...> [options]')
-  .summary('Remove dependencies from packages')
+  .summary('Remove dependencies from packages.')
   .description(
     section([
       grey('Remove dependencies from one or more packages. You will be prompted to select:'),
@@ -63,14 +62,14 @@ export async function runInstaller(
   const pmArgs = getPmArgs(library.pm, action);
 
   if (!pmArgs) {
-    render(txt('Package manager not supported').red().endTree());
+    inline.print(txt('Package manager not supported.').red().endTree());
     return;
   }
 
-  intro(column([grey('Welcome to the'), pink('MonoPKG'), grey('package installer!')]));
+  caption.welcome('package installer!');
 
   if (!library.packages.length) {
-    return outro(red('No packages available in the project.'));
+    caption.cancel('No packages available in the project.');
   }
 
   const title = actionLabelMaps.title[action];
@@ -78,12 +77,10 @@ export async function runInstaller(
   const subTitle = actionLabelMaps.sub[action];
   const endTitle = actionLabelMaps.end[action];
 
-  renderLine([txt('').lineTree(), txt(` ${title} the following dependencies ${dirTitle} packages:`).grey().bullet()]);
-
-  const cancel = () => render(txt('Cancelled').padding(1).red().endTree());
+  section.print([txt('').lineTree(), txt(`${title} the following dependencies ${dirTitle} packages:`).grey().bullet()]);
 
   for (const dep of dependencies) {
-    render(txt(`▣ ${dep}`).padding(1).green().tree());
+    inline.print(txt(`▣ ${dep}`).green().tree());
   }
 
   const { dev, peer, optional } = options;
@@ -107,7 +104,7 @@ export async function runInstaller(
     })) as string;
 
     if (isCancel(scope)) {
-      return cancel();
+      return caption.cancel(`${title} cancelled.`);
     }
   }
 
@@ -122,14 +119,19 @@ export async function runInstaller(
   }
 
   const args = [pmArgs.cmd, scope, ...dependencies].filter((a) => a);
-  await tasks(
+  await runTask(
     packages.map((pkg) => {
       const cwd = join(library.path, pkg.path);
 
       return {
-        title: column([grey(`${title} dependencies ${dirTitle}`), txt(pkg.base).color(pkg.color)]),
+        title: column([
+          grey(`${title} dependencies ${dirTitle} the`),
+          txt(pkg.base).color(pkg.color),
+          grey('package:'),
+        ]),
+        message: column([yellow(library.pm), highlight(args.join(' '))]),
         task: async () => {
-          spawnSync(library.pm, args, { cwd, shell: true, stdio: 'inherit' });
+          await exec(library.pm, args, { cwd });
 
           if (typeof options.afterInstall === 'function') {
             await options.afterInstall(pkg, dependencies, scope);
@@ -141,5 +143,5 @@ export async function runInstaller(
     })
   );
 
-  outro(green(`Installation completed, dependencies ${endTitle} packages.`));
+  caption.success(`Installation completed.`);
 }

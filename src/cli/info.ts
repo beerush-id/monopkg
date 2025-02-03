@@ -1,10 +1,10 @@
 import { Command } from 'commander';
-import { addSharedOptions, configs } from './config.js';
-import { clear, getCtx, icon, inline, render, renderCol, setCtx, txt } from '../utils/common.js';
+import { addSharedOptions, configs } from './program.js';
+import { clear, getCtx, icon, inline, setCtx, txt } from '../utils/common.js';
 import { Package } from '../core/package.js';
 import { library } from '../core/index.js';
 import type { QueryOptions } from '../core/shared.js';
-import { darkGrey, yellow } from '../utils/color.js';
+import { darkGrey } from '../utils/color.js';
 
 export const infoCmd = new Command()
   .configureHelp(configs)
@@ -43,10 +43,10 @@ const setInfoCmd = new Command()
     for (const space of workspaces) {
       if (!space.packages.length) continue;
 
-      render([txt(icon(space.name)).color(space.color).tree(0)]);
+      inline.print([txt(icon(space.name)).color(space.color).tree(0)]);
 
       for (const pkg of space.packages) {
-        render([txt(pkg.base).color(pkg.color).tree(1), txt(':').darkGrey()]);
+        inline.print([txt(pkg.base).color(pkg.color).tree(1), txt(':').darkGrey()]);
 
         for (const keyVal of keyValues) {
           const [key, value] = keyVal.split('=');
@@ -55,14 +55,14 @@ const setInfoCmd = new Command()
 
           if (current) {
             if (current === value) {
-              render([
+              inline.print([
                 txt(key).align(keys).grey().tree(2),
                 txt(':').darkGrey(),
                 ' ',
                 txt(JSON.stringify(value)).green(),
               ]);
             } else {
-              render([
+              inline.print([
                 txt(key).align(keys).grey().tree(2),
                 txt(':').darkGrey(),
                 ' ',
@@ -74,7 +74,12 @@ const setInfoCmd = new Command()
               ]);
             }
           } else {
-            render([txt(key).align(keys).grey().tree(2), txt(':').darkGrey(), ' ', txt(JSON.stringify(value)).green()]);
+            inline.print([
+              txt(key).align(keys).grey().tree(2),
+              txt(':').darkGrey(),
+              ' ',
+              txt(JSON.stringify(value)).green(),
+            ]);
           }
         }
 
@@ -97,15 +102,15 @@ const delInfoCmd = new Command()
     for (const space of workspaces) {
       if (!space.packages.length) continue;
 
-      render([txt(icon(space.name)).color(space.color).tree(0)]);
+      inline.print([txt(icon(space.name)).color(space.color).tree(0)]);
 
       for (const pkg of space.packages) {
-        render([txt(pkg.base).color(pkg.color).tree(1), txt(':').darkGrey()]);
+        inline.print([txt(pkg.base).color(pkg.color).tree(1), txt(':').darkGrey()]);
 
         for (const key of keys) {
           pkg.rem(key);
 
-          render([txt(key).red().tree(2).strike()]);
+          inline.print([txt(key).red().tree(2).strike()]);
         }
 
         pkg.write();
@@ -119,7 +124,7 @@ infoCmd.addCommand(delInfoCmd);
 export const printInfos = (keys: string[], options: QueryOptions) => {
   const workspaces = library.query({ ...options });
 
-  render([
+  inline.print([
     txt(icon(library.name)).green().beginTree(0),
     txt('[').darkGrey(),
     txt('v' + library.version).yellow(),
@@ -129,16 +134,16 @@ export const printInfos = (keys: string[], options: QueryOptions) => {
   for (const space of workspaces) {
     const isLast = workspaces.indexOf(space) === workspaces.length - 1;
 
-    render([txt(icon(space.name)).color(space.color).tree(0), txt(':').darkGrey()]);
+    inline.print([txt(icon(space.name)).color(space.color).tree(0), txt(':').darkGrey()]);
 
     for (const pkg of space.packages) {
       const isLastPkg = space.packages.indexOf(pkg) === space.packages.length - 1;
       printPkgInfo(pkg, options.sort ? keys.sort((a, b) => a.localeCompare(b)) : keys, 0, isLast && isLastPkg);
-      if (!isLastPkg) render(txt('').lineTree(1));
+      if (!isLastPkg) inline.print(txt('').lineTree(1));
     }
 
     if (!isLast) {
-      render(txt('').lineTree());
+      inline.print(txt('').lineTree());
     }
   }
 };
@@ -146,33 +151,25 @@ export const printInfos = (keys: string[], options: QueryOptions) => {
 export const printPkgInfo = (pkg: Package, keys: string[], indent = 0, isEnd = false) => {
   const longestKey = keys.reduce((acc: number, key: string) => (key.length > acc ? key.length : acc), 0);
 
-  renderCol([
+  inline.print([
     txt(pkg.base)
       .color(pkg.color)
       .tree(indent + 1),
-    darkGrey('-'),
-    inline([
-      darkGrey('('),
-      txt(pkg.name).color(pkg.color),
-      darkGrey('@'),
-      yellow(pkg.version),
-      darkGrey(')'),
-      txt(':').darkGrey(),
-    ]),
+    darkGrey(':'),
   ]);
 
   for (const key of keys) {
     const isLast = keys.indexOf(key) === keys.length - 1;
-    setCtx('align', longestKey);
+    setCtx('longest-key', longestKey);
     printValue(key, pkg.get(key), indent + 2, isEnd && isLast);
   }
 };
 
 export const printValue = (label: string, value: unknown, indent = 0, isEnd = false) => {
-  const max = getCtx<number>('align');
+  const max = getCtx<number>('longest-key');
 
   if (Array.isArray(value)) {
-    render([txt(label).grey().tree(indent).align(max), txt(':').darkGrey()]);
+    inline.print([txt(label).grey().tree(indent).align(max), txt(':').darkGrey()]);
 
     const align = (key: string) => key.padEnd(`${value.length - 1}`.length);
 
@@ -181,7 +178,7 @@ export const printValue = (label: string, value: unknown, indent = 0, isEnd = fa
       printValue(align(`${i}`), value[i], indent, isEnd && isLast);
     }
   } else if (typeof value === 'object') {
-    render([txt(label).grey().tree(indent).align(max), txt(':').darkGrey()]);
+    inline.print([txt(label).grey().tree(indent).align(max), txt(':').darkGrey()]);
 
     deepPrint(value as Record<string, unknown>, indent, isEnd);
   } else {
@@ -194,7 +191,7 @@ export const printValue = (label: string, value: unknown, indent = 0, isEnd = fa
       lbl.grey();
     }
 
-    render([
+    inline.print([
       lbl[isEnd ? 'endTree' : 'tree'](indent),
       txt(':').darkGrey(),
       ' ',

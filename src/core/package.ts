@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { bgn, fgn, getCtx, icon, inline, setCtx, txt } from '../utils/common.js';
+import { clear, column, getCtx, Icon, inline, renderCol, Spacer, TreeSign, txt } from '../utils/common.js';
 import process from 'node:process';
 import { type DependencyScope, type MetaPointer, type PackageMeta, readMeta, writeMeta } from './meta.js';
 import { join } from 'node:path';
@@ -7,7 +7,7 @@ import { read, remove, write } from '@beerush/utils';
 import { type Library } from './library.js';
 import { type Workspace } from './workspace.js';
 import { BASE_COLOR, RESOLVE_TIMEOUT, type ScriptCommand } from './shared.js';
-import { darkGrey, green } from '../utils/color.js';
+import { blue, Color, cyan, darkGrey, green, red } from '../utils/color.js';
 
 export const PACKAGES = new Map<string, Package>();
 export const LIBRARIES = new Map<string, Library>();
@@ -279,7 +279,7 @@ export class Package {
     }
   }
 
-  public async run(scripts: string[], sequential?: boolean | 'self', dependent?: string): Promise<unknown[]> {
+  public async run(scripts: string[], sequential?: boolean | 'self', dependent?: string): Promise<void[] | void> {
     if (sequential !== 'self') {
       const dependencies = this.dependencies;
 
@@ -305,38 +305,18 @@ export class Package {
         const block = this.script(script);
 
         if (block) {
-          const longPkg = getCtx<number>('longest-pkg') ?? 0;
-          const longSpace = getCtx<number>('longest-space') ?? 0;
-
-          if (this.base.length > longPkg) setCtx('longest-pkg', this.base.length);
-          if (this.workspace.name.length > longSpace) setCtx('longest-space', this.workspace.name.length);
-
           await this.exec(block, dependent);
         }
       }
 
-      return null as never;
+      return;
     }
 
-    return await Promise.all(scripts.map((script) => this.run([script], 'self', dependent)));
+    await Promise.all(scripts.map((script) => this.run([script], 'self', dependent)));
   }
 
   private createStyledId(cmd: string) {
-    const maxSpace = getCtx<number>('max-space') ?? 0;
-    const maxPackage = getCtx<number>('max-package') ?? 0;
-
-    return inline([
-      txt(icon(this.workspace.name))
-        .color(this.workspace.color)
-        .align(maxSpace, '.' as never)
-        .tree(0),
-      txt(this.base)
-        .color(this.color)
-        .left(maxPackage, '.' as never),
-      darkGrey('['),
-      green(cmd),
-      darkGrey(']'),
-    ]);
+    return getExecLabel(this, cmd);
   }
 
   private async exec(block: ScriptBlock, dependent?: string) {
@@ -348,7 +328,7 @@ export class Package {
     }
 
     if (dependent) {
-      console.log(dependent, fgn.red('requires ->'), logId.replace(/\s+/g, '.'));
+      renderCol([txt(dependent).tree(), red('requires ->'), logId]);
     }
 
     const current = this.get(`scripts.${block.name}`);
@@ -364,7 +344,7 @@ export class Package {
 
     const pm = this.library.pm;
     const debounce = this.library.config?.execDebounce?.(block) ?? RESOLVE_TIMEOUT;
-    console.log(logId, fgn.blue(pm), fgn.cyan('run'), fgn.green(block.name));
+    renderCol([txt(logId).tree(), blue(pm), cyan('run'), green(block.name)]);
     const promise = execScript(pm, ['run', block.name], join(this.library.path, this.path), logId, debounce);
 
     RUNNING_SCRIPTS.get(this)?.set(block.name, promise);
@@ -375,6 +355,30 @@ export class Package {
     }
   }
 }
+
+export const getMaxExecLabel = (packages: Package[]) => {
+  return packages.reduce((max, pkg) => {
+    const label = inline([pkg.workspace.name, pkg.base]);
+    return Math.max(max, label.length);
+  }, 0);
+};
+
+export const getExecLabel = (pkg: Package, cmd: string) => {
+  const maxSpace = getCtx<number>('max-space') ?? 0;
+  return inline([
+    column([
+      txt(Icon.CHECKED).color(pkg.workspace.color),
+      txt(pkg.workspace.name)
+        .color(pkg.workspace.color)
+        .left(maxSpace - pkg.base.length, Spacer.DOT),
+    ]),
+    darkGrey('.'),
+    txt(pkg.base).color(pkg.color),
+    darkGrey('['),
+    green(cmd),
+    darkGrey(']'),
+  ]);
+};
 
 async function execScript(cmd: string, args: string[], cwd: string, logId: string, timeout = RESOLVE_TIMEOUT) {
   let debounce = 0;
@@ -394,11 +398,12 @@ async function execScript(cmd: string, args: string[], cwd: string, logId: strin
       debounce = setTimeout(() => {
         resolved = true;
         resolve('ok');
-        console.log(
-          logId,
-          bgn.green(' ✓ Script processed. '),
-          fgn.green(`(${(Date.now() - startTime).toLocaleString()}ms)`)
-        );
+
+        renderCol([
+          txt(logId).tree(),
+          green(' ✓ Script processed. '),
+          green(`(${(Date.now() - startTime).toLocaleString()}ms)`),
+        ]);
       }, timeout) as never;
     };
 
@@ -407,26 +412,28 @@ async function execScript(cmd: string, args: string[], cwd: string, logId: strin
         resolveQueue();
       }
 
-      const lPads = fgn.padding(logId);
-      let lines = data
-        .toString()
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line);
+      const text = data.toString();
+      const prefixLength = clear(logId).length;
+      const maxLength = (process.stdout.columns ?? 80) - prefixLength - 6;
+      const newLines = txt(text).wrap(maxLength).lines;
+      const firstLine = newLines.shift();
+      const nextLines = newLines
+        .map((line) => {
+          if (!line.trim()) return '';
+          return inline([
+            darkGrey(TreeSign.MIDDLE),
+            darkGrey(Spacer.DASHED.repeat(prefixLength + 2)),
+            inline([' ', line]),
+          ]);
+        })
+        .filter((l) => l)
+        .join('\n');
 
-      if (lines.length > 1) {
-        lines = lines.map((line, i) => {
-          if (line === '') return '';
-          if (i === 0) return fgn.wrap(line, logId + ' ');
-          return fgn.wrap(line, fgn.grey(lPads + '↪ '));
-        });
-      } else {
-        lines = lines.map((line) => {
-          return fgn.wrap(line, logId + ' ', fgn.grey('↪ '));
-        });
+      process.stdout.write(txt(logId).tree().text() + ' ' + firstLine + '\n');
+
+      if (nextLines) {
+        process.stdout.write(nextLines + '\n');
       }
-
-      process.stdout.write(lines.join('\n') + '\n');
     };
 
     child.stdout.on('data', print);
@@ -436,11 +443,11 @@ async function execScript(cmd: string, args: string[], cwd: string, logId: strin
       clearTimeout(debounce);
 
       if (!resolved) {
-        console.log(
-          logId,
-          bgn.green(' ✓ Script completed. '),
-          fgn.green(`(${(Date.now() - startTime).toLocaleString()}ms)`)
-        );
+        renderCol([
+          txt(logId).tree(),
+          txt(' ✓ Script completed. ').black().fill(Color.GREEN),
+          green(`(${(Date.now() - startTime).toLocaleString()}ms)`),
+        ]);
 
         resolved = true;
       }

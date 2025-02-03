@@ -1,11 +1,10 @@
 import { Command } from 'commander';
-import { addSharedOptions, configs } from '../cli/config.js';
-
-import { column, renderLine, section, txt } from '../utils/common.js';
-import { intro, isCancel, outro, select, tasks } from '@clack/prompts';
-import { green, grey, pink, red } from '../utils/color.js';
-import { library, type QueryOptions, selectPackages } from './index.js';
-import { actionLabelMaps, type DependencyScope } from './meta.js';
+import { addSharedOptions, caption, configs } from './program.js';
+import { column, section, txt } from '../utils/common.js';
+import { isCancel, select, tasks } from '@clack/prompts';
+import { grey } from '../utils/color.js';
+import { library, type QueryOptions, selectPackages } from '../core/index.js';
+import { actionLabelMaps, type DependencyScope } from '../core/meta.js';
 
 export const attachCmd = new Command()
   .configureHelp(configs)
@@ -38,14 +37,14 @@ type AttachOptions = QueryOptions & {
 };
 
 export async function attachDependencies(action: 'link' | 'unlink', packages: string[], options: AttachOptions) {
-  intro(column([grey('Welcome to the'), pink('MonoPKG'), grey('linking wizard!')]));
+  caption.welcome('linking wizard!');
 
   const title = actionLabelMaps.title[action];
   const endTitle = actionLabelMaps.end[action];
   const altTitle = actionLabelMaps.alt[action];
 
   if (!packages.length) {
-    renderLine([txt('').lineTree(), txt(` No source packages to be ${altTitle} from.`).yellow().tree()]);
+    section.print([txt('').lineTree(), txt(`No source packages to be ${altTitle} from.`).yellow().tree()]);
 
     const result = await selectPackages(library, {
       subTitle: `be ${altTitle} from`,
@@ -59,10 +58,10 @@ export async function attachDependencies(action: 'link' | 'unlink', packages: st
     packages = result.map((p) => p.base);
   }
 
-  renderLine([
+  section.print([
     txt('').lineTree(),
-    txt(` ${title} internal packages.`).grey().bullet(),
-    ...packages.map((name) => txt(`▣ ${name}`).padding(1).green().tree()),
+    txt(`${title} internal packages.`).grey().bullet(),
+    ...packages.map((name) => txt(`▣ ${name}`).green().tree()),
   ]);
 
   const { dev, peer, optional } = options;
@@ -86,10 +85,10 @@ export async function attachDependencies(action: 'link' | 'unlink', packages: st
     })) as DependencyScope;
 
     if (isCancel(scope)) {
-      return outro(red('Setup cancelled.'));
+      return caption.cancel('Setup cancelled.');
     }
   }
-  renderLine([txt('').lineTree(), txt(` Now pick the target packages to be ${altTitle} to.`).grey().tree()]);
+  section.print([txt('').lineTree(), txt(`Now pick the target packages to be ${altTitle} to.`).grey().tree()]);
 
   const targets = await selectPackages(library, {
     ...options,
@@ -133,5 +132,5 @@ export async function attachDependencies(action: 'link' | 'unlink', packages: st
     }),
   ]);
 
-  outro(green('Setup complete!'));
+  caption.success('Setup complete!');
 }

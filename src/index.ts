@@ -1,11 +1,11 @@
 import { program } from 'commander';
-import { configs } from './cli/config.js';
+import { configs } from './cli/program.js';
 import { versionCmd } from './cli/version.js';
 import { addCmd, removeCmd } from './cli/dependency.js';
 import { linkCmd, unlinkCmd } from './cli/link.js';
 import { listCmd } from './cli/list.js';
-import { attachCmd, detachCmd } from './core/attach.js';
-import { runCmd } from './run.js';
+import { attachCmd, detachCmd } from './cli/attach.js';
+import { runCmd } from './cli/run.js';
 import { createCmd } from './cli/package.js';
 import { scriptCmd } from './cli/script.js';
 import { infoCmd } from './cli/info.js';
@@ -17,12 +17,23 @@ import { render, shouldTired } from './utils/common.js';
 import { yellow } from './utils/color.js';
 import { sleep } from '@beerush/utils';
 
+declare global {
+  interface String {
+    print(): void;
+  }
+}
+
+String.prototype.print = function () {
+  console.log(this);
+};
+
 program
   .configureHelp(configs)
   .name('monopkg')
   .description('A simple, yet useful package manager for monorepos.')
   .usage('<command> [options]')
   .helpOption('-h, --help', 'Show usage information.')
+  .helpCommand('help [command]', 'Display help for a specific command.')
   .version(`0.0.1`, '-v, --version', 'Output the current version.');
 
 program

@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { addSharedOptions, configs } from './config.js';
+import { addSharedOptions, configs } from './program.js';
 import { runInstaller } from './dependency.js';
 
 export const linkCmd = new Command()
@@ -16,7 +16,7 @@ addSharedOptions(linkCmd);
 export const unlinkCmd = new Command()
   .configureHelp(configs)
   .command('unlink <dependencies...>')
-  .description('Unlink dependencies from packages')
+  .description('Unlink dependencies from packages.')
   .action(async (dependencies) => {
     await runInstaller('unlink', dependencies, unlinkCmd.opts());
   });

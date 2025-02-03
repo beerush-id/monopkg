@@ -1,6 +1,6 @@
-import { confirm, intro, isCancel, multiselect, outro, select, tasks, text } from '@clack/prompts';
+import { confirm, intro, isCancel, multiselect, select, tasks, text } from '@clack/prompts';
 import { blue, Color, cyan, darkGrey, green, grey, pink, red, yellow } from '../utils/color.js';
-import { column, icon, inline, render, renderLine, txt } from '../utils/common.js';
+import { column, icon, inline, section, txt } from '../utils/common.js';
 import { PACKAGE_MANAGERS } from './pm.js';
 import { basename, join } from 'node:path';
 import { APP_TEMPLATES, type PackageTemplate, validate } from './template.js';
@@ -10,6 +10,7 @@ import type { PackageMeta } from './meta.js';
 import { spawnSync } from 'node:child_process';
 import { merge } from '@beerush/utils';
 import { isGitClean } from '../utils/shell.js';
+import { caption } from '../cli/program.js';
 
 type SpaceTemplate = {
   name: string;
@@ -66,7 +67,7 @@ export async function setupProject({
   initMeta,
 }: SetupProjectOptions = {}) {
   const cancel = (message?: string) => {
-    outro(red(message ?? 'Setup wizard cancelled.'));
+    caption.cancel(message ?? 'Setup wizard cancelled.');
   };
 
   if (isInit) {
@@ -76,7 +77,7 @@ export async function setupProject({
       intro(column([grey('Welcome to the'), pink(icon('MonoPKG')), grey('project upgrade wizard!')]));
     } else {
       intro(column([grey('Welcome to the'), pink(icon('MonoPKG')), grey('project setup wizard!')]));
-      renderLine([
+      section.print([
         txt('').lineTree(),
         column([
           txt(` Looks like you haven't initialized a`).yellow().tree(),
@@ -117,7 +118,7 @@ export async function setupProject({
   }
 
   if (isUpgrade && !isGitClean()) {
-    render(red('Git repository is not clean. Please commit or stash your changes.'));
+    inline.print(red('Git repository is not clean. Please commit or stash your changes.'));
     return cancel();
   }
 
@@ -290,10 +291,10 @@ export async function setupProject({
     },
   ]);
 
-  outro(green('Project initialization complete.'));
+  caption.success('Project initialization complete.');
 
   if (!isUpgrade) {
-    renderLine([
+    section.print([
       txt('To get started, run the following commands:').green().beginTree(),
       txt(column([blue('cd'), cyan(basename(outPath))])).tree(0),
       txt(column([blue(pm), cyan('install')])).endTree(),

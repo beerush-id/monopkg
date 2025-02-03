@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress';
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   base: '/monopkg/',
-  title: '⚡ MonoPKG',
+  title: '▩ MonoPKG',
   description: 'A simple, yet useful package manager for monorepos',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config

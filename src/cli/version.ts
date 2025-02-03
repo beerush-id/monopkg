@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import { addSharedOptions, configs } from './config.js';
+import { addSharedOptions, caption, configs } from './program.js';
 
-import { column, renderLine, txt } from '../utils/common.js';
-import { intro, isCancel, outro, select, tasks } from '@clack/prompts';
-import { green, grey, pink, red, yellow } from '../utils/color.js';
+import { column, section, txt } from '../utils/common.js';
+import { isCancel, select, tasks } from '@clack/prompts';
+import { grey, yellow } from '../utils/color.js';
 import { library, selectPackages } from '../core/index.js';
 import { writeMeta } from '../core/meta.js';
 
@@ -12,9 +12,9 @@ export const versionCmd = new Command()
   .command('version [version]')
   .description('Bump or set package version (default: patch)')
   .action(async (version: string) => {
-    intro(column([grey('Welcome to the'), pink('MonoPKG'), grey('version wizard!')]));
+    caption.welcome('version wizard!');
 
-    renderLine([txt('').lineTree(), txt(' Updating package versions.').grey().bullet()]);
+    section.print([txt('').lineTree(), txt('Updating package versions.').grey().bullet()]);
 
     const packages = await selectPackages(library, {
       ...versionCmd.opts(),
@@ -37,7 +37,7 @@ export const versionCmd = new Command()
       })) as string;
 
       if (isCancel(version)) {
-        return outro(red('Version update cancelled.'));
+        return caption.cancel('Version update cancelled.');
       }
     }
 
@@ -76,7 +76,7 @@ export const versionCmd = new Command()
       }),
     ]);
 
-    outro(green('Version update complete!'));
+    caption.success('Version update complete!');
   });
 
 addSharedOptions(versionCmd);

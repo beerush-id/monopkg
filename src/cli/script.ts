@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import { addSharedOptions, configs } from './config.js';
-import { column, inline, renderLine, txt } from '../utils/common.js';
+import { addSharedOptions, caption, configs } from './program.js';
+import { column, inline, section, txt } from '../utils/common.js';
 import { library, selectPackages } from '../core/index.js';
-import { intro, outro, tasks } from '@clack/prompts';
-import { cyan, darkGrey, green, grey, highlight, pink } from '../utils/color.js';
+import { outro, tasks } from '@clack/prompts';
+import { cyan, darkGrey, green, grey, highlight } from '../utils/color.js';
 import { writeMeta } from '../core/meta.js';
 
 export const scriptCmd = new Command()
@@ -25,13 +25,13 @@ const addCmd = new Command()
 
     scriptIntro();
 
-    renderLine([
+    section.print([
       txt('').lineTree(),
-      txt(' Adding the following scripts:').grey().bullet(),
+      txt('Adding the following scripts:').grey().bullet(),
       ...scripts.map((s) => {
         const [name, script] = s.split(delimiter);
 
-        return txt(inline([green(` ${name}`), grey(delimiter), cyan(`"${script}"`)])).tree();
+        return txt(inline([green(`${name}`), grey(delimiter), cyan(`"${script}"`)])).tree();
       }),
     ]);
 
@@ -66,7 +66,13 @@ const addCmd = new Command()
       })
     );
 
-    outro(column([grey('Scripts added to'), green(`${packages.length}`), grey('packages.')]));
+    outro(
+      inline([
+        txt(' Scripts added to').white().fillDarkGrey(),
+        txt(` ${packages.length} `).green().fillDarkGrey(),
+        txt('packages. ').white().fillDarkGrey(),
+      ])
+    );
   });
 
 addSharedOptions(addCmd);
@@ -79,10 +85,10 @@ const listCmd = new Command()
   .action(async (scripts: string[]) => {
     scriptIntro();
 
-    renderLine([
+    section.print([
       txt('').lineTree(),
-      txt(' Inspecting the following scripts:').grey().bullet(),
-      ...(scripts.length ? scripts : ['All']).map((s) => txt(green(` ${s}`)).tree()),
+      txt('Inspecting the following scripts:').grey().bullet(),
+      ...(scripts.length ? scripts : ['All']).map((s) => txt(green(`${s}`)).tree()),
     ]);
 
     const packages = await selectPackages(library, {
@@ -105,20 +111,26 @@ const listCmd = new Command()
       );
       const inspected = keys.map((name) => {
         return txt(
-          inline([txt(` ${name}`).green().align(keys), darkGrey(': '), highlight(`"${pkg.meta.scripts?.[name]}"`)])
+          inline([txt(`${name}`).green().align(keys), darkGrey(': '), highlight(`"${pkg.meta.scripts?.[name]}"`)])
         ).tree(1);
       });
 
       if (inspected.length) {
-        renderLine([
+        section.print([
           txt('').lineTree(),
-          txt(column([grey(' Scripts in'), inline([txt(pkg.base).color(pkg.color), darkGrey(':')])])).tree(),
+          txt(column([grey('Scripts in'), inline([txt(pkg.base).color(pkg.color), darkGrey(':')])])).tree(),
           ...inspected,
         ]);
       }
     }
 
-    outro(column([grey('Inspected scripts in'), green(`${packages.length}`), grey('packages.')]));
+    outro(
+      inline([
+        txt(' Inspected scripts in').white().fillDarkGrey(),
+        txt(` ${packages.length} `).green().fillDarkGrey(),
+        txt('packages. ').white().fillDarkGrey(),
+      ])
+    );
   });
 
 addSharedOptions(listCmd);
@@ -131,7 +143,7 @@ const remCmd = new Command()
   .action(async (scripts: string[]) => {
     scriptIntro();
 
-    renderLine([
+    section.print([
       txt('').lineTree(),
       txt(' Removing the following scripts:').grey().bullet(),
       ...scripts.map((s) => txt(green(` ${s}`)).tree()),
@@ -170,7 +182,13 @@ const remCmd = new Command()
       })
     );
 
-    outro(column([grey('Scripts removed from'), green(`${packages.length}`), grey('packages.')]));
+    outro(
+      inline([
+        txt(' Scripts removed from').white().fillDarkGrey(),
+        txt(` ${packages.length} `).green().fillDarkGrey(),
+        txt('packages. ').white().fillDarkGrey(),
+      ])
+    );
   });
 
 addSharedOptions(remCmd);
@@ -180,5 +198,5 @@ scriptCmd.addCommand(listCmd);
 scriptCmd.addCommand(remCmd);
 
 function scriptIntro() {
-  intro(column([grey('Welcome to the'), pink('MonoPKG'), grey('script manager!')]));
+  caption.welcome('script manager!');
 }
