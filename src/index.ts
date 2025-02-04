@@ -6,7 +6,7 @@ import { linkCmd, unlinkCmd } from './cli/link.js';
 import { listCmd } from './cli/list.js';
 import { attachCmd, detachCmd } from './cli/attach.js';
 import { runCmd } from './cli/run.js';
-import { createCmd } from './cli/package.js';
+import { createCmd, moveCmd } from './cli/package.js';
 import { scriptCmd } from './cli/script.js';
 import { infoCmd } from './cli/info.js';
 import { workspaceCmd } from './cli/workspace.js';
@@ -45,6 +45,7 @@ program
   .addCommand(initCmd)
   .addCommand(linkCmd)
   .addCommand(listCmd, { isDefault: true })
+  .addCommand(moveCmd)
   .addCommand(removeCmd)
   .addCommand(runCmd)
   .addCommand(scriptCmd)

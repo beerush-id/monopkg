@@ -1,13 +1,13 @@
 import { Command } from 'commander';
-import { addOverrides, caption, configs } from './program.js';
-import { mkdirSync, renameSync } from 'node:fs';
-import { column, icon, inline, newLine, section, txt } from '../utils/common.js';
+import { addOverrides, caption, configs, exec, runTask } from './program.js';
+import { existsSync, mkdirSync, renameSync } from 'node:fs';
+import { column, Icon, icon, inline, newLine, section, txt } from '../utils/common.js';
 import { shell } from '../utils/shell.js';
 import { listPointers, type PackageMeta, readMeta, writeMeta } from '../core/meta.js';
-import { library, Workspace } from '../core/index.js';
+import { library, selectPackages, Workspace } from '../core/index.js';
 import { join } from 'node:path';
 import { blue, cyan, darkGrey, green, grey, red, yellow } from '../utils/color.js';
-import { isCancel, select } from '@clack/prompts';
+import { confirm, isCancel, select } from '@clack/prompts';
 import { APP_TEMPLATES, setupPackage, TEMPLATE_CATEGORIES } from '../core/template.js';
 
 const colorMap = [yellow, cyan, green, blue, cyan, cyan, cyan, cyan, cyan, cyan, cyan];
@@ -233,3 +233,165 @@ export const createCmd = new Command()
   });
 
 addOverrides(createCmd);
+
+export const moveCmd = new Command()
+  .configureHelp(configs)
+  .command('move [packages...]')
+  .summary('Move package to a different workspace.')
+  .option('-w, --workspace <workspace>', 'Set the target workspace.')
+  .option('--dry', 'Dry run without making changes.')
+  .action(async (packages: string[]) => {
+    const options = moveCmd.opts();
+
+    caption.welcome('package moving wizard!', options.dry);
+
+    const targets = await selectPackages(library, {
+      filter: packages,
+      subTitle: 'move from',
+      cancelMessage: 'Moving packages cancelled.',
+    });
+
+    if (!targets) {
+      return;
+    }
+
+    const keys = targets.map((pkg) => pkg.base);
+
+    section.print([
+      txt('').lineTree(),
+      column([txt('Moving the following packages:').grey().bullet()]),
+      ...targets.map((pkg) => {
+        return column([
+          txt(Icon.CHECKED).green().tree(),
+          txt(pkg.base).color(pkg.color).align(keys),
+          txt('from').grey(),
+          txt(library.workspace.name).color(library.workspace.color),
+        ]);
+      }),
+    ]);
+
+    if (!options.workspace) {
+      const result = await select({
+        message: grey('Which workspace to move the packages to?'),
+        options: library.workspaces
+          .filter((space) => {
+            return targets.every((pkg) => pkg.workspace.name !== space.name);
+          })
+          .map((space) => ({
+            value: space.name,
+            label: txt(icon(space.name)).color(space.color).text(),
+          })),
+      });
+
+      if (isCancel(result)) {
+        return caption.cancel('Moving packages cancelled.');
+      }
+
+      options.workspace = result as never;
+    }
+
+    const workspace = library.getSpace(options.workspace);
+
+    if (!workspace) {
+      section.print([
+        txt('').lineTree(),
+        column([
+          txt('ERROR_ROOT: Workspace').red().tree(),
+          txt(options.workspace).green(),
+          txt('can not be found!').red(),
+        ]),
+        txt('').lineTree(),
+      ]);
+
+      inline.print(txt('Available workspaces:').grey().tree());
+
+      library.workspaces.forEach((space, i) => {
+        const label = txt(icon(space.name)).color(space.color);
+
+        if (i === library.workspaces.length - 1) {
+          inline.print(label.endTree(0));
+        } else {
+          inline.print(label.tree(0));
+        }
+      });
+
+      return;
+    }
+
+    section.print([
+      txt('').lineTree(),
+      column([txt('To workspace').grey().tree(), txt(workspace.name).color(workspace.color)]),
+    ]);
+
+    const proceed = await confirm({
+      message: yellow('Are you sure you want to move these packages?'),
+      initialValue: false,
+    });
+
+    if (isCancel(proceed) || !proceed) {
+      return caption.cancel('Moving packages cancelled.');
+    }
+
+    const moved: string[] = [];
+
+    await runTask(
+      targets.map((pkg) => {
+        return {
+          title: column([
+            txt('Moving package').grey(),
+            txt(pkg.base).color(pkg.color),
+            txt('to').grey(),
+            txt(workspace.name).color(workspace.color),
+          ]),
+          task: async () => {
+            const origin = join(library.path, pkg.path);
+            const originPath = origin.replace(library.path, '').replace(/^\\/, '').replace(/\\/g, '/');
+            const destination = join(library.path, workspace.path, pkg.base);
+            const destinationPath = destination.replace(library.path, '').replace(/^\\/, '').replace(/\\/g, '/');
+            const exist = existsSync(destination);
+
+            if (exist) {
+              return new Error(
+                column([
+                  txt('Package').red(),
+                  txt(pkg.base).color(pkg.color),
+                  txt('already exists in workspace').red(),
+                  txt(workspace.name).color(workspace.color),
+                ])
+              );
+            }
+
+            if (!options.dry) {
+              renameSync(origin, destination);
+            }
+
+            moved.push(pkg.base);
+            return section([
+              column([
+                txt('Package').grey(),
+                txt(pkg.base).color(pkg.color),
+                txt('moved to').grey(),
+                txt(workspace.name).color(workspace.color),
+              ]),
+              column([txt(originPath).darkGrey().strike(), txt('->').grey(), txt(destinationPath).cyan()]),
+            ]);
+          },
+        };
+      })
+    );
+
+    if (moved.length) {
+      await runTask({
+        title: grey('Propagating changes...'),
+        task: async () => {
+          if (!options.dry) {
+            await exec(library.pm, ['install'], { cwd: library.path });
+          }
+
+          return green('Changes propagated.');
+        },
+      });
+    }
+
+    caption.success('Moving packages complete.');
+  });

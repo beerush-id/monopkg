@@ -115,6 +115,7 @@ export enum Spacer {
   RING = '◇',
   EXEC = '»',
   DONE = '✓',
+  ERROR = '✗',
 }
 
 const maxLength = (texts: number | string[]) => {
@@ -273,6 +274,11 @@ export class Text {
 
   public done(level = 0, fg = Color.GREEN, spacer = Spacer.SPACE) {
     this.prefix = stylize((Spacer.DONE + spacer).padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
+    return this;
+  }
+
+  public error(level = 0, fg = Color.RED, spacer = Spacer.SPACE) {
+    this.prefix = stylize((Spacer.ERROR + spacer).padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
     return this;
   }
 

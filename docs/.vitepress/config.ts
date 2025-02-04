@@ -52,6 +52,7 @@ export default defineConfig({
             collapsed: true,
             items: [
               { text: 'Create Package', link: '/guides/create' },
+              { text: 'Move Package', link: '/guides/move' },
               { text: 'List Packages', link: '/guides/list' },
               { text: 'Link Packages', link: '/guides/attach' },
               { text: 'Unlink Packages', link: '/guides/detach' },

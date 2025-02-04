@@ -110,7 +110,7 @@ export async function exec(cmd: string, args: string[], opts?: { cwd: string }) 
 export type TaskInit = {
   title: string;
   message?: string;
-  task: () => Promise<string | void>;
+  task: () => Promise<string | void | Error>;
 };
 
 export async function runTask(tasks: TaskInit | TaskInit[]) {
@@ -129,7 +129,11 @@ export async function runTask(tasks: TaskInit | TaskInit[]) {
     const result = await task.task();
 
     if (result) {
-      writeDone(result);
+      if (result instanceof Error) {
+        writeError(result);
+      } else {
+        writeDone(result);
+      }
     }
   }
 }
@@ -148,6 +152,16 @@ export const writeDone = (message: string) => {
   message.split('\n').forEach((line, i) => {
     if (i === 0) {
       section.print(txt(line).done());
+    } else {
+      section.print(txt(line).tree());
+    }
+  });
+};
+
+export const writeError = (error: Error) => {
+  error.message.split('\n').forEach((line, i) => {
+    if (i === 0) {
+      section.print(txt(line).error());
     } else {
       section.print(txt(line).tree());
     }
