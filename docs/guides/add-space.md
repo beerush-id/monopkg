@@ -1,4 +1,4 @@
-# Adding Workspace
+# Add Workspace
 
 Workspaces are folders that contain packages or applications. In a monorepo, workspaces are used to group related
 packages and applications together. In this guide, you will learn how to add new workspaces to your monorepo.

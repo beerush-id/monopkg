@@ -1,4 +1,4 @@
-# Adding Scripts
+# Add Scripts
 
 In a monorepo, you may have multiple packages that share common scripts. Managing these scripts individually for each
 package can be time-consuming and error-prone. To streamline this process, you can use the `monopkg script add` command

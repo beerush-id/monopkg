@@ -106,7 +106,7 @@ Manage workspaces and packages within your monorepo with ease. Create, update, a
 
 ![Workspace Management](/workspace.jpg)
 
-[Learn more about managing workspaces with MonoPKG](../guides/workspace.md)
+[Learn more about managing workspaces with MonoPKG](../guides/add-space.md)
 
 ## Get Started Quickly
 
