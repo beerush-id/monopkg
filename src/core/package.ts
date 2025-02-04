@@ -7,7 +7,7 @@ import { read, remove, write } from '@beerush/utils';
 import { type Library } from './library.js';
 import { type Workspace } from './workspace.js';
 import { BASE_COLOR, RESOLVE_TIMEOUT, type ScriptCommand } from './shared.js';
-import { blue, Color, cyan, darkGrey, green } from '../utils/color.js';
+import { blue, cyan, darkGrey, green } from '../utils/color.js';
 
 export const PACKAGES = new Map<string, Package>();
 export const LIBRARIES = new Map<string, Library>();
@@ -30,6 +30,8 @@ export type ScriptBlock = {
   package: Package;
   commands: ScriptCommand[];
 };
+
+export const STACK_RESOLVES = new Map<string, boolean>();
 
 export class Package {
   public id = crypto.randomUUID();
@@ -279,29 +281,48 @@ export class Package {
     }
   }
 
-  public async run(
-    scripts: string[],
-    sequential?: boolean | 'self',
-    dependent?: string,
-    dry?: boolean
-  ): Promise<void[] | void> {
-    if (sequential !== 'self') {
-      const dependencies = this.dependencies;
+  public runStacks(scripts: string[]): Package[] {
+    if (STACK_RESOLVES.get(this.id)) {
+      return [];
+    }
 
-      if (dependencies.length) {
-        if (sequential) {
-          for (const dep of dependencies) {
-            for (const script of scripts) {
-              await dep.run([script], true, this.createStyledId(script), dry);
-            }
+    const packages = [];
+
+    for (const dep of this.dependencies) {
+      const canRun = dep.hasScript(...scripts);
+
+      if (canRun) {
+        packages.push(...dep.runStacks(scripts));
+      }
+    }
+
+    packages.push(this);
+
+    STACK_RESOLVES.set(this.id, true);
+
+    return packages;
+  }
+
+  public async run(scripts: string[], sequential?: boolean, dependent?: string, dry?: boolean): Promise<void[] | void> {
+    const dependencies = this.dependencies;
+
+    if (dependencies.length) {
+      if (sequential) {
+        for (const dep of dependencies) {
+          for (const script of scripts) {
+            await dep.run([script], true, this.createStyledId(script), dry);
           }
-        } else {
-          await Promise.all(
-            dependencies.map((dep) => {
-              return Promise.all(scripts.map((script) => dep.run([script], true, this.createStyledId(script), dry)));
-            })
-          );
         }
+      } else {
+        await Promise.all(
+          dependencies.map((dep) => {
+            return Promise.all(
+              scripts.map((script) => {
+                return dep.run([script], false, this.createStyledId(script), dry);
+              })
+            );
+          })
+        );
       }
     }
 
@@ -315,9 +336,17 @@ export class Package {
       }
 
       return;
-    }
+    } else {
+      await Promise.all(
+        scripts.map((script) => {
+          const block = this.script(script);
 
-    await Promise.all(scripts.map((script) => this.run([script], 'self', dependent, dry)));
+          if (block) {
+            return this.exec(block, dependent, dry);
+          }
+        })
+      );
+    }
   }
 
   private createStyledId(cmd: string) {
@@ -349,7 +378,7 @@ export class Package {
 
     const pm = this.library.pm;
     const debounce = this.library.config?.execDebounce?.(block) ?? RESOLVE_TIMEOUT;
-    renderCol([txt(logId).tree(), blue(pm), cyan('run'), green(block.name)]);
+    renderCol([txt(logId).exec(), blue(pm), cyan('run'), green(block.name)]);
 
     const promise = execScript(pm, ['run', block.name], join(this.library.path, this.path), logId, debounce, dry);
 
@@ -407,7 +436,7 @@ async function execScript(
         resolve('ok');
 
         renderCol([
-          txt(logId).tree(),
+          txt(logId).done(),
           txt(' ✓ Script processed. ').black().fillGreen(),
           green(`(${(Date.now() - startTime).toLocaleString()}ms)`),
         ]);
@@ -462,8 +491,8 @@ async function execScript(
 
       if (!resolved) {
         renderCol([
-          txt(logId).tree(),
-          txt(' ✓ Script completed. ').black().fill(Color.GREEN),
+          txt(logId).done(),
+          txt(' ✓ Script completed. ').black().fillGreen(),
           green(`(${(Date.now() - startTime).toLocaleString()}ms)`),
         ]);
 

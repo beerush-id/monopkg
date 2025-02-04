@@ -126,14 +126,19 @@ export async function runTask(tasks: TaskInit | TaskInit[]) {
     }
     txt('').lineTree().print();
 
-    const result = await task.task();
+    try {
+      const result = await task.task();
 
-    if (result) {
-      if (result instanceof Error) {
-        writeError(result);
-      } else {
-        writeDone(result);
+      if (result) {
+        if (result instanceof Error) {
+          writeError(result);
+        } else {
+          writeDone(result);
+        }
       }
+    } catch (error) {
+      writeError(error as Error);
+      return;
     }
   }
 }

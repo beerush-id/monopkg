@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { addSharedOptions, caption, configs } from './program.js';
 import { column, inline, section, setCtx, txt } from '../utils/common.js';
-import { getMaxExecLabel } from '../core/package.js';
+import { getMaxExecLabel, STACK_RESOLVES } from '../core/package.js';
 import { library, selectPackages } from '../core/index.js';
 import { darkGrey } from '../utils/color.js';
 
@@ -47,9 +47,10 @@ export const runCmd = new Command()
       return;
     }
 
-    const clearSpace = setCtx('max-space', getMaxExecLabel(packages));
-
     if (beforeRun?.length) {
+      const beforeStacks = packages.map((pkg) => pkg.runStacks(beforeRun)).flat();
+      setCtx('max-space', getMaxExecLabel(beforeStacks));
+
       section.print([
         txt('').lineTree(),
         column([
@@ -64,11 +65,16 @@ export const runCmd = new Command()
           await pkg.run(beforeRun, true, undefined, dry);
         }
       } else {
-        await Promise.all(packages.map((pkg) => pkg.run(beforeRun, true, undefined, dry)));
+        await Promise.all(packages.map((pkg) => pkg.run(beforeRun, false, undefined, dry)));
       }
 
       section.print([txt('').lineTree(), txt(' Before-run script execution completed. ').black().fillGreen().done()]);
     }
+
+    STACK_RESOLVES.clear();
+
+    const stacks = packages.map((pkg) => pkg.runStacks(scripts)).flat();
+    setCtx('max-space', getMaxExecLabel(stacks));
 
     section.print([
       txt('').lineTree(),
@@ -83,8 +89,6 @@ export const runCmd = new Command()
     } else {
       await Promise.all(packages.map((pkg) => pkg.run(scripts, false, undefined, dry)));
     }
-
-    clearSpace();
 
     caption.success('Script execution completed.');
   });

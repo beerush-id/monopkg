@@ -466,5 +466,12 @@ export async function selectPackages(library: Library, options: SelectOptions) {
     return !options.isExcluded?.(pkg);
   });
 
+  if (!filter.length) {
+    render(txt('').lineTree());
+    render(txt(column([grey(`No packages available matching the filters to ${subTitle}.`)])).tree());
+    caption.cancel(options.cancelMessage);
+    return [];
+  }
+
   return library.find(...filter);
 }

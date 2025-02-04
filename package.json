@@ -28,7 +28,7 @@
     "build": "rimraf dist && tsup",
     "clean": "rimraf dist",
     "format": "prettier --write ./src",
-    "prepublish": "rimraf dist && tsup && publint",
+    "prepublish": "rimraf dist && prettier --write ./src && tsup && publint",
     "docs:dev": "vitepress dev docs --port 3636",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"

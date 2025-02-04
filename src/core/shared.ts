@@ -3,7 +3,7 @@ import type { ScriptBlock } from './package.js';
 
 export const PKG_QUERY_OPTIONS = ['filter', 'exclude', 'private', 'public', 'restricted', 'publishable'];
 export const BASE_COLOR = 200;
-export const RESOLVE_TIMEOUT = 1000; // 0.5s
+export const RESOLVE_TIMEOUT = 2500; // 2.5s
 
 export type QueryOptions = {
   workspace?: string[];
