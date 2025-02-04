@@ -6,7 +6,7 @@ import { basename, join } from 'node:path';
 import { APP_TEMPLATES, type PackageTemplate, validate } from './template.js';
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
-import type { PackageMeta } from './meta.js';
+import { type PackageMeta } from './meta.js';
 import { spawnSync } from 'node:child_process';
 import { merge } from '@beerush/utils';
 import { isGitClean } from '../utils/shell.js';
@@ -195,6 +195,9 @@ export async function setupProject({
     pm === 'bun' ? pmVersion : spawnSync('node', ['--version'], { shell: true }).stdout.toString().trim();
   const bin = pm === 'bun' ? 'bpkg' : 'mpkg';
 
+  const selfUrl = new URL('../../package.json', import.meta.url);
+  const selfMeta = JSON.parse(readFileSync(selfUrl, 'utf-8')) as PackageMeta;
+
   const meta: PackageMeta = {
     name,
     type: 'module',
@@ -208,7 +211,7 @@ export async function setupProject({
       test: `${bin} run test`,
     },
     devDependencies: {
-      monopkg: '^0.0.1',
+      monopkg: `^${selfMeta.version ?? '0.0.1'}`,
       prettier: '^3.4.2',
     },
     engines: {
