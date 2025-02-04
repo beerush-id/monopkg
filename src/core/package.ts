@@ -7,7 +7,7 @@ import { read, remove, write } from '@beerush/utils';
 import { type Library } from './library.js';
 import { type Workspace } from './workspace.js';
 import { BASE_COLOR, RESOLVE_TIMEOUT, type ScriptCommand } from './shared.js';
-import { blue, Color, cyan, darkGrey, green, red } from '../utils/color.js';
+import { blue, Color, cyan, darkGrey, green } from '../utils/color.js';
 
 export const PACKAGES = new Map<string, Package>();
 export const LIBRARIES = new Map<string, Library>();
@@ -279,7 +279,12 @@ export class Package {
     }
   }
 
-  public async run(scripts: string[], sequential?: boolean | 'self', dependent?: string): Promise<void[] | void> {
+  public async run(
+    scripts: string[],
+    sequential?: boolean | 'self',
+    dependent?: string,
+    dry?: boolean
+  ): Promise<void[] | void> {
     if (sequential !== 'self') {
       const dependencies = this.dependencies;
 
@@ -287,13 +292,13 @@ export class Package {
         if (sequential) {
           for (const dep of dependencies) {
             for (const script of scripts) {
-              await dep.run([script], true, this.createStyledId(script));
+              await dep.run([script], true, this.createStyledId(script), dry);
             }
           }
         } else {
           await Promise.all(
             dependencies.map((dep) => {
-              return Promise.all(scripts.map((script) => dep.run([script], true, this.createStyledId(script))));
+              return Promise.all(scripts.map((script) => dep.run([script], true, this.createStyledId(script), dry)));
             })
           );
         }
@@ -305,21 +310,21 @@ export class Package {
         const block = this.script(script);
 
         if (block) {
-          await this.exec(block, dependent);
+          await this.exec(block, dependent, dry);
         }
       }
 
       return;
     }
 
-    await Promise.all(scripts.map((script) => this.run([script], 'self', dependent)));
+    await Promise.all(scripts.map((script) => this.run([script], 'self', dependent, dry)));
   }
 
   private createStyledId(cmd: string) {
     return getExecLabel(this, cmd);
   }
 
-  private async exec(block: ScriptBlock, dependent?: string) {
+  private async exec(block: ScriptBlock, dependent?: string, dry?: boolean) {
     const logId = this.createStyledId(block.name);
     const running = RUNNING_SCRIPTS.get(this)?.get(block.name);
 
@@ -328,7 +333,7 @@ export class Package {
     }
 
     if (dependent) {
-      renderCol([txt(dependent).tree(), red('requires ->'), logId]);
+      renderCol([txt(dependent).tree(), txt(' depends on -> ').black().fillBlue(), logId]);
     }
 
     const current = this.get(`scripts.${block.name}`);
@@ -345,7 +350,8 @@ export class Package {
     const pm = this.library.pm;
     const debounce = this.library.config?.execDebounce?.(block) ?? RESOLVE_TIMEOUT;
     renderCol([txt(logId).tree(), blue(pm), cyan('run'), green(block.name)]);
-    const promise = execScript(pm, ['run', block.name], join(this.library.path, this.path), logId, debounce);
+
+    const promise = execScript(pm, ['run', block.name], join(this.library.path, this.path), logId, debounce, dry);
 
     RUNNING_SCRIPTS.get(this)?.set(block.name, promise);
     await promise;
@@ -380,18 +386,19 @@ export const getExecLabel = (pkg: Package, cmd: string) => {
   ]);
 };
 
-async function execScript(cmd: string, args: string[], cwd: string, logId: string, timeout = RESOLVE_TIMEOUT) {
+async function execScript(
+  cmd: string,
+  args: string[],
+  cwd: string,
+  logId: string,
+  timeout = RESOLVE_TIMEOUT,
+  dry?: boolean
+) {
   let debounce = 0;
   let resolved = false;
   const startTime = Date.now();
 
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, {
-      cwd,
-      stdio: ['inherit', 'pipe', 'pipe'],
-      shell: true,
-    });
-
     const resolveQueue = () => {
       clearTimeout(debounce);
 
@@ -401,11 +408,22 @@ async function execScript(cmd: string, args: string[], cwd: string, logId: strin
 
         renderCol([
           txt(logId).tree(),
-          green(' ✓ Script processed. '),
+          txt(' ✓ Script processed. ').black().fillGreen(),
           green(`(${(Date.now() - startTime).toLocaleString()}ms)`),
         ]);
       }, timeout) as never;
     };
+
+    if (dry) {
+      resolveQueue();
+      return;
+    }
+
+    const child = spawn(cmd, args, {
+      cwd,
+      stdio: ['inherit', 'pipe', 'pipe'],
+      shell: true,
+    });
 
     const print = (data: string) => {
       if (!resolved) {

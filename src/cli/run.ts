@@ -12,9 +12,9 @@ export const runCmd = new Command()
   .option('-s, --sequential', 'Run scripts sequentially.')
   .option('-b, --before-run <scripts...>', 'Run scripts before the main script.')
   .action(async (scripts: string[] = []) => {
-    const { beforeRun = [], sequential } = runCmd.opts();
+    const { beforeRun = [], sequential, dry } = runCmd.opts();
 
-    caption.welcome('script runner');
+    caption.welcome('script runner!', dry);
 
     inline.print([
       txt(`Running in ${sequential ? 'sequential' : 'parallel'} mode.`)
@@ -40,7 +40,7 @@ export const runCmd = new Command()
       ...runCmd.opts(),
       subTitle: 'run the scripts in',
       cancelMessage: 'Script execution cancelled.',
-      isHidden: (pkg) => !pkg.hasScript(...scripts),
+      isExcluded: (pkg) => !pkg.hasScript(...scripts),
     });
 
     if (!packages?.length) {
@@ -53,35 +53,35 @@ export const runCmd = new Command()
       section.print([
         txt('').lineTree(),
         column([
-          txt('Running before-run scripts').blue().tree(),
-          darkGrey(`(${sequential ? 'Sequentially' : 'In parallel'}).`),
+          txt('Running before-run scripts').blue().exec(),
+          darkGrey(`(${sequential ? 'Sequentially' : 'Parallel'}).`),
         ]),
         txt('').lineTree(),
       ]);
 
       if (sequential) {
         for (const pkg of packages) {
-          await pkg.run(beforeRun, true);
+          await pkg.run(beforeRun, true, undefined, dry);
         }
       } else {
-        await Promise.all(packages.map((pkg) => pkg.run(beforeRun, true)));
+        await Promise.all(packages.map((pkg) => pkg.run(beforeRun, true, undefined, dry)));
       }
 
-      section.print([txt('').lineTree(), txt(' Before-run scripts completed.').green().bullet()]);
+      section.print([txt('').lineTree(), txt(' Before-run script execution completed. ').black().fillGreen().done()]);
     }
 
     section.print([
       txt('').lineTree(),
-      column([txt('Running scripts').blue().bullet(), darkGrey(`(${sequential ? 'Sequentially' : 'In parallel'}).`)]),
+      column([txt('Running scripts').blue().exec(), darkGrey(`(${sequential ? 'Sequentially' : 'Parallel'}).`)]),
       txt('').lineTree(),
     ]);
 
     if (sequential) {
       for (const pkg of packages) {
-        await pkg.run(scripts, true);
+        await pkg.run(scripts, true, undefined, dry);
       }
     } else {
-      await Promise.all(packages.map((pkg) => pkg.run(scripts)));
+      await Promise.all(packages.map((pkg) => pkg.run(scripts, false, undefined, dry)));
     }
 
     clearSpace();

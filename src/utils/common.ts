@@ -111,7 +111,10 @@ export enum Spacer {
   DASH = '─',
   DASHED = '┄',
   DOT = '.',
-  BULLET = '●',
+  BULLET = '•',
+  RING = '◇',
+  EXEC = '»',
+  DONE = '✓',
 }
 
 const maxLength = (texts: number | string[]) => {
@@ -255,6 +258,21 @@ export class Text {
 
   public bullet(level = 0, fg = Color.DARK_GREY, spacer = Spacer.SPACE) {
     this.prefix = stylize((Spacer.BULLET + spacer).padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
+    return this;
+  }
+
+  public ring(level = 0, fg = Color.GREEN, spacer = Spacer.SPACE) {
+    this.prefix = stylize((Spacer.RING + spacer).padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
+    return this;
+  }
+
+  public exec(level = 0, fg = Color.GREEN, spacer = Spacer.SPACE) {
+    this.prefix = stylize((Spacer.EXEC + spacer).padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
+    return this;
+  }
+
+  public done(level = 0, fg = Color.GREEN, spacer = Spacer.SPACE) {
+    this.prefix = stylize((Spacer.DONE + spacer).padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
     return this;
   }
 
@@ -560,7 +578,7 @@ export const newLine = (dashed: boolean = true, fill: Spacer = Spacer.DASH) => {
  * @returns {boolean}
  */
 export function shouldAngry(): boolean {
-  return Math.random() < 0.02;
+  return Math.random() < 0;
 }
 
 /**
@@ -568,5 +586,5 @@ export function shouldAngry(): boolean {
  * @returns {boolean}
  */
 export function shouldTired(): boolean {
-  return Math.random() < 0.01;
+  return Math.random() < 0;
 }

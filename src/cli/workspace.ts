@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { caption, configs } from './program.js';
+import { addOverrides, caption, configs } from './program.js';
 import { column, icon, inline, section, txt } from '../utils/common.js';
 import { isCancel, multiselect, tasks, text } from '@clack/prompts';
 import { cyan, green, grey } from '../utils/color.js';
@@ -17,9 +17,9 @@ const addCmd = new Command()
   .description('Add workspaces to the project.')
   .option('--cold', 'Skip creating new directories')
   .action(async (workspaces: string[] = []) => {
-    const { cold } = workspaceCmd.opts();
+    const { cold, dry } = addCmd.opts();
 
-    workspaceIntro();
+    workspaceIntro(dry);
 
     section.print([txt('').lineTree(), txt('Add workspaces to the project.').grey().bullet()]);
 
@@ -62,8 +62,7 @@ const addCmd = new Command()
       {
         title: grey('Adding workspaces to the project...'),
         task: async () => {
-          library.add(workspaces, !cold);
-
+          library.add(workspaces, !cold, dry);
           return green('Workspaces added to the project.');
         },
       },
@@ -73,10 +72,9 @@ const addCmd = new Command()
     for (const space of newSpaces) {
       inline.print(
         column([
-          txt(` ${icon(space.name)}`)
+          txt(`${icon(space.name)}`)
             .color(space.color)
             .tree(),
-          grey('added.'),
         ])
       );
     }
@@ -85,6 +83,7 @@ const addCmd = new Command()
   });
 
 workspaceCmd.addCommand(addCmd);
+addOverrides(addCmd);
 
 const listCmd = new Command()
   .configureHelp(configs)
@@ -128,7 +127,9 @@ const removeCmd = new Command()
   .command('remove [workspaces...]')
   .description('Remove workspace from the project.')
   .action(async (workspaces: string[] = []) => {
-    workspaceIntro();
+    const { dry } = removeCmd.opts();
+
+    workspaceIntro(dry);
 
     section.print([txt('').lineTree(), txt('Remove workspaces from the project.').grey().bullet()]);
 
@@ -156,17 +157,16 @@ const removeCmd = new Command()
       {
         title: grey('Removing workspaces from the project...'),
         task: async () => {
-          library.remove(workspaces);
+          library.remove(workspaces, dry);
           return green('Workspaces removed from the project:');
         },
       },
     ]);
     for (const space of workspaces) {
       column.print([
-        txt(` ${icon(space)}`)
+        txt(`${icon(space)}`)
           .red()
           .tree(),
-        grey('removed.'),
       ]);
     }
 
@@ -180,7 +180,8 @@ const removeCmd = new Command()
   });
 
 workspaceCmd.addCommand(removeCmd);
+addOverrides(removeCmd);
 
-const workspaceIntro = () => {
-  caption.welcome('workspace manager!');
+const workspaceIntro = (dry?: boolean) => {
+  caption.welcome('workspace manager!', dry);
 };

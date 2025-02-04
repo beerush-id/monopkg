@@ -1,9 +1,18 @@
 import { Command } from 'commander';
-import { addSharedOptions, caption, configs, exec, runTask } from './program.js';
+import {
+  addSharedOptions,
+  addSharedSaveOptions,
+  caption,
+  configs,
+  exec,
+  type FilterOptions,
+  runTask,
+  type SaveOptions,
+} from './program.js';
 import { column, inline, section, txt } from '../utils/common.js';
 import { isCancel, select } from '@clack/prompts';
 import { grey, highlight, yellow } from '../utils/color.js';
-import { library, Package, type QueryOptions, selectPackages } from '../core/index.js';
+import { library, Package, selectPackages } from '../core/index.js';
 import { join } from 'node:path';
 import { getPmArgs } from '../core/pm.js';
 import { actionLabelMaps } from '../core/meta.js';
@@ -13,20 +22,12 @@ export const addCmd = new Command()
   .command('add <dependencies...>')
   .usage('<dependencies...> [options]')
   .summary('Add dependencies to packages.')
-  .option('-d, --dev', 'Add as dev dependencies.')
-  .option('-p, --peer', 'Add as peer dependencies.')
-  .option('-o, --optional', 'Add as optional dependencies.')
-  .description(
-    section([
-      grey('Add dependencies to one or more packages. You will be prompted to select:'),
-      txt('Dependency scope (Default: dependencies).').grey().list(),
-      txt('Packages to add the dependencies to (Default: none).').grey().list(),
-    ])
-  )
+  .description('Add dependencies to one or more packages.')
   .action(async (dependencies: string[]) => {
     await runInstaller('add', dependencies, addCmd.opts());
   });
 
+addSharedSaveOptions(addCmd, 'Add');
 addSharedOptions(addCmd);
 
 export const removeCmd = new Command()
@@ -47,12 +48,10 @@ export const removeCmd = new Command()
 
 addSharedOptions(removeCmd);
 
-type InstallerOptions = QueryOptions & {
-  dev?: boolean;
-  peer?: boolean;
-  optional?: boolean;
-  afterInstall?: (pkg: Package, dependencies: string[], scope: string) => Promise<void> | void;
-};
+type InstallerOptions = FilterOptions &
+  SaveOptions & {
+    afterInstall?: (pkg: Package, dependencies: string[], scope: string) => Promise<void> | void;
+  };
 
 export async function runInstaller(
   action: 'add' | 'remove' | 'link' | 'unlink',
@@ -66,7 +65,7 @@ export async function runInstaller(
     return;
   }
 
-  caption.welcome('package installer!');
+  caption.welcome('package installer!', options.dry);
 
   if (!library.packages.length) {
     caption.cancel('No packages available in the project.');
@@ -92,7 +91,11 @@ export async function runInstaller(
         ? pmArgs.scopes.optionalDependencies
         : '';
 
-  if (['add'].includes(action) && !scope) {
+  if (!scope && options.yes) {
+    scope = pmArgs.scopes.dependencies;
+  }
+
+  if (['add'].includes(action) && !scope && !options.yes) {
     scope = (await select({
       message: grey('Which dependency scope to use?'),
       options: [
@@ -131,10 +134,12 @@ export async function runInstaller(
         ]),
         message: column([yellow(library.pm), highlight(args.join(' '))]),
         task: async () => {
-          await exec(library.pm, args, { cwd });
+          if (!options.dry) {
+            await exec(library.pm, args, { cwd });
 
-          if (typeof options.afterInstall === 'function') {
-            await options.afterInstall(pkg, dependencies, scope);
+            if (typeof options.afterInstall === 'function') {
+              await options.afterInstall(pkg, dependencies, scope);
+            }
           }
 
           return column([grey(`Dependencies ${endTitle} the`), txt(pkg.base).color(pkg.color), grey('package.')]);

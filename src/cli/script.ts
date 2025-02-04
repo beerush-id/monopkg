@@ -12,18 +12,16 @@ export const scriptCmd = new Command()
   .usage('<command>')
   .description('Manage scripts in packages');
 
-addSharedOptions(scriptCmd);
-
 const addCmd = new Command()
   .configureHelp(configs)
   .command('add <name="script"...>')
   .usage('<name="script"...>')
   .description('Add scripts to packages')
-  .option('--delimiter <delimiter>', 'Delimiter for scripts', '=')
+  .option('--delimiter <delimiter>', 'Key-Value delimiter of the scripts.', '=')
   .action(async (scripts: string[]) => {
-    const { delimiter = '=' } = scriptCmd.opts();
+    const { delimiter = '=', dry } = addCmd.opts();
 
-    scriptIntro();
+    scriptIntro(dry);
 
     section.print([
       txt('').lineTree(),
@@ -58,7 +56,9 @@ const addCmd = new Command()
               pkg.meta.scripts[name] = script;
             }
 
-            writeMeta(pkg.pointer.file, pkg.meta);
+            if (!dry) {
+              writeMeta(pkg.pointer.file, pkg.meta);
+            }
 
             return column([grey('Scripts added to'), txt(pkg.base).color(pkg.color)]);
           },
@@ -77,7 +77,7 @@ const addCmd = new Command()
 
 addSharedOptions(addCmd);
 
-const listCmd = new Command()
+const inspectCmd = new Command()
   .configureHelp(configs)
   .command('inspect [name...]')
   .usage('[name...]')
@@ -95,7 +95,7 @@ const listCmd = new Command()
       ...scriptCmd.opts(),
       subTitle: 'inspect scripts in',
       cancelMessage: 'Script inspection cancelled.',
-      isHidden: (pkg) => {
+      isExcluded: (pkg) => {
         if (!scripts.length) return false;
         return !scripts.some((s) => pkg.meta.scripts?.[s]);
       },
@@ -133,7 +133,7 @@ const listCmd = new Command()
     );
   });
 
-addSharedOptions(listCmd);
+addSharedOptions(inspectCmd);
 
 const remCmd = new Command()
   .configureHelp(configs)
@@ -141,7 +141,9 @@ const remCmd = new Command()
   .usage('<name...>')
   .description('Remove scripts from packages')
   .action(async (scripts: string[]) => {
-    scriptIntro();
+    const { dry } = remCmd.opts();
+
+    scriptIntro(dry);
 
     section.print([
       txt('').lineTree(),
@@ -153,7 +155,7 @@ const remCmd = new Command()
       ...scriptCmd.opts(),
       subTitle: 'remove scripts from',
       cancelMessage: 'Script removal cancelled.',
-      isHidden: (pkg) => {
+      isExcluded: (pkg) => {
         return !scripts.some((s) => pkg.meta.scripts?.[s]);
       },
     });
@@ -174,7 +176,9 @@ const remCmd = new Command()
               delete pkg.meta.scripts?.[item];
             }
 
-            writeMeta(pkg.pointer.file, pkg.meta);
+            if (!dry) {
+              writeMeta(pkg.pointer.file, pkg.meta);
+            }
 
             return column([grey('Scripts removed from'), txt(pkg.base).color(pkg.color)]);
           },
@@ -194,9 +198,9 @@ const remCmd = new Command()
 addSharedOptions(remCmd);
 
 scriptCmd.addCommand(addCmd);
-scriptCmd.addCommand(listCmd);
+scriptCmd.addCommand(inspectCmd);
 scriptCmd.addCommand(remCmd);
 
-function scriptIntro() {
-  caption.welcome('script manager!');
+function scriptIntro(dry?: boolean) {
+  caption.welcome('script manager!', dry);
 }

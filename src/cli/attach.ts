@@ -1,23 +1,29 @@
 import { Command } from 'commander';
-import { addSharedOptions, caption, configs } from './program.js';
+import {
+  addSharedOptions,
+  addSharedSaveOptions,
+  caption,
+  configs,
+  exec,
+  type FilterOptions,
+  runTask,
+  type SaveOptions,
+} from './program.js';
 import { column, section, txt } from '../utils/common.js';
-import { isCancel, select, tasks } from '@clack/prompts';
-import { grey } from '../utils/color.js';
-import { library, type QueryOptions, selectPackages } from '../core/index.js';
+import { isCancel, select } from '@clack/prompts';
+import { green, grey } from '../utils/color.js';
+import { library, selectPackages } from '../core/index.js';
 import { actionLabelMaps, type DependencyScope } from '../core/meta.js';
 
 export const attachCmd = new Command()
   .configureHelp(configs)
   .command('attach [packages...]')
   .description("Link internal packages within the project's scope.")
-  .option('-s, --save', 'Link as dependencies.')
-  .option('-d, --dev', 'Link devDependencies.')
-  .option('-p, --peer', 'Link peerDependencies.')
-  .option('-o, --optional', 'Link optionalDependencies.')
   .action(async (packages: string[]) => {
-    await attachDependencies('link', packages, attachCmd.opts());
+    await updateDependencies('link', packages, attachCmd.opts());
   });
 
+addSharedSaveOptions(attachCmd, 'Link');
 addSharedOptions(attachCmd);
 
 export const detachCmd = new Command()
@@ -25,19 +31,15 @@ export const detachCmd = new Command()
   .command('detach [packages...]')
   .description("Unlink internal packages within the project's scope.")
   .action(async (packages: string[]) => {
-    await attachDependencies('unlink', packages, detachCmd.opts());
+    await updateDependencies('unlink', packages, detachCmd.opts());
   });
 
 addSharedOptions(detachCmd);
 
-type AttachOptions = QueryOptions & {
-  dev: boolean;
-  peer: boolean;
-  optional: boolean;
-};
+type AttachOptions = FilterOptions & SaveOptions;
 
-export async function attachDependencies(action: 'link' | 'unlink', packages: string[], options: AttachOptions) {
-  caption.welcome('linking wizard!');
+export async function updateDependencies(action: 'link' | 'unlink', packages: string[], options: AttachOptions) {
+  caption.welcome('linking wizard!', options.dry);
 
   const title = actionLabelMaps.title[action];
   const endTitle = actionLabelMaps.end[action];
@@ -73,6 +75,10 @@ export async function attachDependencies(action: 'link' | 'unlink', packages: st
         ? 'optionalDependencies'
         : ('' as DependencyScope);
 
+  if (options.yes && !scope) {
+    scope = 'dependencies';
+  }
+
   if (!scope && action === 'link') {
     scope = (await select({
       message: grey('Which dependency scope to use?'),
@@ -88,14 +94,20 @@ export async function attachDependencies(action: 'link' | 'unlink', packages: st
       return caption.cancel('Setup cancelled.');
     }
   }
-  section.print([txt('').lineTree(), txt(`Now pick the target packages to be ${altTitle} to.`).grey().tree()]);
+
+  if (!options.yes && !options?.filter?.length) {
+    section.print([txt('').lineTree(), txt(`Now pick the target packages to be ${altTitle} to.`).grey().tree()]);
+  }
 
   const targets = await selectPackages(library, {
     ...options,
     subTitle: `be ${endTitle}`,
     cancelMessage: 'Setup cancelled.',
-    isHidden: (pkg) => {
-      if (action === 'link') return false;
+    isExcluded: (pkg) => {
+      if (action === 'link') {
+        return packages.includes(pkg.base) || packages.includes(pkg.name);
+      }
+
       return !pkg.hasDependency(...packages);
     },
   });
@@ -104,15 +116,17 @@ export async function attachDependencies(action: 'link' | 'unlink', packages: st
     return;
   }
 
-  await tasks([
+  await runTask([
     ...targets.map((pkg) => {
       return {
         title: column([grey(`${title} packages to`), txt(pkg.base).color(pkg.color)]),
         task: async () => {
-          if (action === 'link') {
-            pkg.setDependency(scope, ...packages);
-          } else {
-            pkg.removeDependency(...packages);
+          if (!options.dry) {
+            if (action === 'link') {
+              pkg.setDependency(scope, ...packages);
+            } else {
+              pkg.removeDependency(...packages);
+            }
           }
 
           return section([
@@ -121,15 +135,21 @@ export async function attachDependencies(action: 'link' | 'unlink', packages: st
               txt(pkg.base).color(pkg.color),
               grey(`now ${action === 'link' ? 'depends on' : endTitle}:`),
             ]),
-            ...packages.map((dep) =>
-              txt(' ' + dep)
-                .green()
-                .tree(0)
-            ),
+            ...packages.map((dep) => txt(dep).green()),
           ]);
         },
       };
     }),
+    {
+      title: column([txt('Finalizing the setup.').grey()]),
+      task: async () => {
+        if (!options.dry) {
+          await exec(library.pm, ['install'], { cwd: library.path });
+        }
+
+        return green('All set!');
+      },
+    },
   ]);
 
   caption.success('Setup complete!');

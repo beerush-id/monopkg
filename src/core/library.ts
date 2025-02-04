@@ -157,7 +157,7 @@ export class Library {
     this.status = 'ready';
   }
 
-  public add(spaces: string[], mkdir = true) {
+  public add(spaces: string[], mkdir = true, dry?: boolean) {
     if (!Array.isArray(this.meta.workspaces)) this.meta.workspaces = [];
 
     for (let pattern of spaces) {
@@ -173,17 +173,19 @@ export class Library {
       const workspace = new Workspace(this, name, path, pattern);
       this.workspaces.push(workspace);
 
-      if (mkdir) {
+      if (mkdir && !dry) {
         const dir = join(this.path, path);
         mkdirSync(dir, { recursive: true });
         writeFileSync(join(dir, '.gitkeep'), '', 'utf-8');
       }
     }
 
-    this.write();
+    if (!dry) {
+      this.write();
+    }
   }
 
-  public remove(spaces: string[]) {
+  public remove(spaces: string[], dry?: boolean) {
     if (!Array.isArray(this.meta.workspaces)) this.meta.workspaces = [];
 
     for (const pattern of spaces) {
@@ -199,7 +201,9 @@ export class Library {
       }
     }
 
-    this.write();
+    if (!dry) {
+      this.write();
+    }
   }
 
   public load(workspaces?: string[]) {
@@ -227,9 +231,9 @@ export class Library {
   public getSpace(name: string): Workspace | void;
   public getSpace(options: QueryOptions): Workspace | void;
   public getSpace(name: string | QueryOptions): Workspace | void {
-    if (typeof name === 'object' && Array.isArray(name.root)) {
-      if (name.root.length) {
-        return this.getSpace(name.root[0]);
+    if (typeof name === 'object' && Array.isArray(name.workspace)) {
+      if (name.workspace.length) {
+        return this.getSpace(name.workspace[0]);
       } else {
         return this.workspace;
       }
@@ -257,7 +261,7 @@ export class Library {
   }
 
   public query(options: QueryOptions, withEmpty?: boolean) {
-    const spaces = this.findSpace(...(options.root ?? []));
+    const spaces = this.findSpace(...(options.workspace ?? []));
     const result: Workspace[] = [];
 
     for (const space of spaces) {
@@ -345,34 +349,42 @@ export type SelectOptions = QueryOptions & {
   subTitle?: string;
   endTitle?: string;
   cancelMessage?: string;
-  isHidden?: (pkg: Package) => boolean;
+  yes?: boolean;
+  isExcluded?: (pkg: Package) => boolean;
 };
 
 export async function selectPackages(library: Library, options: SelectOptions) {
   const { filter: include = [], exclude = [], subTitle } = options;
-  let { root = [] } = options;
+  let { workspace: root = [] } = options;
+
+  if (!root?.length && options.yes) {
+    root.push('all');
+  }
+
+  if (!include?.length && options.yes) {
+    include.push('all');
+  }
 
   if (root.includes('all')) {
     root = library.workspaces.map((space) => space.name);
   }
 
   let filter = [...include];
-  const workspaces = library.query({ root });
 
   if (include?.includes('all')) {
-    filter = library.packages.map((pkg) => pkg.base);
+    filter = library.packages
+      .filter((pkg) => {
+        return !root?.length || root.includes(pkg.workspace.name);
+      })
+      .map((pkg) => pkg.base);
   }
+
+  const workspaces = library.query({ workspace: root });
 
   if (!filter.length) {
     for (const space of workspaces) {
       const packages = space.packages
-        .filter((pkg) => {
-          if (typeof options.isHidden === 'function') {
-            return !options.isHidden(pkg);
-          }
-
-          return true;
-        })
+        .filter((pkg) => !options.isExcluded?.(pkg))
         .filter((pkg) => {
           return !exclude.includes(pkg.base) && !exclude.includes(pkg.name);
         })
@@ -394,7 +406,7 @@ export async function selectPackages(library: Library, options: SelectOptions) {
         render(
           txt(
             column([
-              grey(` No packages available to ${subTitle} the`),
+              grey(`No packages available to ${subTitle} the`),
               txt(space.name).color(space.color),
               grey('workspace.'),
             ])
@@ -446,6 +458,13 @@ export async function selectPackages(library: Library, options: SelectOptions) {
       return;
     }
   }
+
+  filter = filter.filter((name) => {
+    const pkg = library.get(name);
+    if (!pkg) return false;
+
+    return !options.isExcluded?.(pkg);
+  });
 
   return library.find(...filter);
 }

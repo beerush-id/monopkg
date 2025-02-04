@@ -1,6 +1,6 @@
-import { confirm, intro, isCancel, multiselect, select, tasks, text } from '@clack/prompts';
+import { confirm, isCancel, multiselect, select, tasks, text } from '@clack/prompts';
 import { blue, Color, cyan, darkGrey, green, grey, pink, red, yellow } from '../utils/color.js';
-import { column, icon, inline, section, txt } from '../utils/common.js';
+import { column, Icon, icon, inline, section, txt } from '../utils/common.js';
 import { PACKAGE_MANAGERS } from './pm.js';
 import { basename, join } from 'node:path';
 import { APP_TEMPLATES, type PackageTemplate, validate } from './template.js';
@@ -51,7 +51,7 @@ export type SetupProjectOptions = {
   path?: string;
   name?: string;
   pm?: string;
-  workspaces?: string[];
+  workspace?: string[];
   isInit?: boolean;
   isUpgrade?: boolean;
   initMeta?: PackageMeta;
@@ -62,7 +62,7 @@ export async function setupProject({
   isUpgrade = false,
   path = '',
   name = '',
-  workspaces = [],
+  workspace: workspaces = [],
   pm,
   initMeta,
 }: SetupProjectOptions = {}) {
@@ -71,16 +71,16 @@ export async function setupProject({
   };
 
   if (isInit) {
-    intro(column([grey('Welcome to the'), pink(icon('MonoPKG')), grey('project setup wizard!')]));
+    caption.welcome('project setup wizard!');
   } else {
     if (isUpgrade) {
-      intro(column([grey('Welcome to the'), pink(icon('MonoPKG')), grey('project upgrade wizard!')]));
+      caption.welcome('project upgrade wizard!');
     } else {
-      intro(column([grey('Welcome to the'), pink(icon('MonoPKG')), grey('project setup wizard!')]));
+      caption.welcome('project setup wizard!');
       section.print([
         txt('').lineTree(),
         column([
-          txt(` Looks like you haven't initialized a`).yellow().tree(),
+          txt(`Looks like you haven't initialized a`).yellow().tree(),
           pink(icon('MonoPKG')),
           yellow('project yet.'),
         ]),
@@ -138,7 +138,7 @@ export async function setupProject({
     pm = (await select({
       message: grey('Which package manager would you like to use?'),
       initialValue: 'bun',
-      options: Object.entries(PACKAGE_MANAGERS).map(([key, value]) => {
+      options: Object.entries(PACKAGE_MANAGERS).map(([ key, value ]) => {
         return { value: key, label: value.label };
       }),
     })) as string;
@@ -152,15 +152,16 @@ export async function setupProject({
     const keys = SPACE_TEMPLATES.map((space) => space.name);
 
     workspaces = (await multiselect({
-      message: grey('Which workspaces would you like to create?'),
-      initialValues: ['apps', 'packages'],
+      message: grey('Which workspaces would you like to create? (Default: all)'),
+      required: true,
+      initialValues: [ 'apps', 'packages', 'services' ],
       options: SPACE_TEMPLATES.map((space) => {
         return {
           value: space.name,
           label: inline([
-            txt(icon(space.name)).align(keys).color(space.color),
+            column([ txt(Icon.BRAND).color(space.color), txt(space.name).align(keys).color(space.color) ]),
             darkGrey(' - '),
-            txt(space.label).color(space.color),
+            txt(space.label).align(keys).color(space.color),
           ]),
           hint: space.hint,
         };
@@ -179,19 +180,19 @@ export async function setupProject({
     .map((s) => {
       const space = SPACE_TEMPLATES.find((space) => space.name === s);
       if (space) {
-        return `- \`**${space.name}**\` (**${space.label}**) - ${space.hint}`;
+        return `- \`**${ space.name }**\` (**${ space.label }**) - ${ space.hint }`;
       } else {
-        return `- \`**${s}**\``;
+        return `- \`**${ s }**\``;
       }
     })
     .join('\n');
   readme = readme.replace('{{SPACES}}', workspaceList);
 
   const outPath = join(process.cwd(), path);
-  const pmVersion = spawnSync(pm, ['--version'], { shell: true }).stdout.toString().trim();
+  const pmVersion = spawnSync(pm, [ '--version' ], { shell: true }).stdout.toString().trim();
   const engine = pm === 'bun' ? 'bun' : 'node';
   const engineVersion =
-    pm === 'bun' ? pmVersion : spawnSync('node', ['--version'], { shell: true }).stdout.toString().trim();
+    pm === 'bun' ? pmVersion : spawnSync('node', [ '--version' ], { shell: true }).stdout.toString().trim();
 
   const meta: PackageMeta = {
     name,
@@ -206,15 +207,15 @@ export async function setupProject({
       test: 'monopkg run test',
     },
     devDependencies: {
-      monopkg: '^0.0.1',
+      // monopkg: '^0.0.1',
       prettier: '^3.4.2',
     },
     engines: {
-      [engine]: `>=${engineVersion}`,
+      [engine]: `>=${ engineVersion }`,
     },
-    packageManager: `${pm}@${pmVersion}`,
+    packageManager: `${ pm }@${ pmVersion }`,
     private: true,
-    workspaces: workspaces.map((space) => `${space}/*`),
+    workspaces: workspaces.map((space) => `${ space }/*`),
   } as never;
 
   if (initMeta) {
@@ -223,13 +224,13 @@ export async function setupProject({
 
   await tasks([
     {
-      title: grey(`Creating root workspaces in ${outPath}...`),
+      title: grey(`Creating root workspaces in ${ outPath }...`),
       task: async () => {
         if (!isUpgrade) {
           mkdirSync(outPath, { recursive: true });
         }
 
-        return inline([green('Root workspaces'), grey(' created.')]);
+        return inline([ green('Root workspaces'), grey(' created.') ]);
       },
     },
     ...workspaces.map((s) => {
@@ -244,14 +245,14 @@ export async function setupProject({
       }
 
       return {
-        title: inline([grey('Creating '), txt(icon(space.name)).color(space.color), grey(` workspace...`)]),
+        title: inline([ grey('Creating '), txt(icon(space.name)).color(space.color), grey(` workspace...`) ]),
         task: async () => {
           const spacePath = join(outPath, space.name);
 
           mkdirSync(spacePath, { recursive: true });
           writeFileSync(join(spacePath, '.gitkeep'), '', 'utf-8');
 
-          return inline([grey('Workspace '), txt(icon(space.name)).color(space.color), grey(' created.')]);
+          return inline([ grey('Workspace '), txt(icon(space.name)).color(space.color), grey(' created.') ]);
         },
       };
     }),
@@ -261,7 +262,7 @@ export async function setupProject({
         const pkgPath = join(outPath, 'package.json');
         const pkg = JSON.stringify(meta, null, 2);
         writeFileSync(pkgPath, pkg, 'utf-8');
-        return inline([green('package.json'), grey(' file created.')]);
+        return inline([ green('package.json'), grey(' file created.') ]);
       },
     },
     {
@@ -272,7 +273,7 @@ export async function setupProject({
           writeFileSync(readmePath, readme, 'utf-8');
         }
 
-        return inline([green('README.md'), grey(' file created.')]);
+        return inline([ green('README.md'), grey(' file created.') ]);
       },
     },
     {
@@ -280,13 +281,13 @@ export async function setupProject({
       task: async () => {
         if (!isUpgrade) {
           for (const file of files) {
-            const src = new URL(`../templates/basic/${file}`, import.meta.url);
+            const src = new URL(`../templates/basic/${ file }`, import.meta.url);
             const dest = join(outPath, file);
             writeFileSync(dest, readFileSync(src), 'utf-8');
           }
         }
 
-        return inline([green('Template files'), grey(' copied.')]);
+        return inline([ green('Template files'), grey(' copied.') ]);
       },
     },
   ]);
@@ -296,8 +297,8 @@ export async function setupProject({
   if (!isUpgrade) {
     section.print([
       txt('To get started, run the following commands:').green().beginTree(),
-      txt(column([blue('cd'), cyan(basename(outPath))])).tree(0),
-      txt(column([blue(pm), cyan('install')])).endTree(),
+      txt(column([ blue('cd'), cyan(basename(outPath)) ])).tree(0),
+      txt(column([ blue(pm), cyan('install') ])).endTree(),
     ]);
   }
 

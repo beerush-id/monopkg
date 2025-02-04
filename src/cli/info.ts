@@ -1,10 +1,10 @@
 import { Command } from 'commander';
-import { addSharedOptions, configs } from './program.js';
-import { clear, getCtx, icon, inline, setCtx, txt } from '../utils/common.js';
+import { addSharedOptions, caption, configs, type FilterOptions, runTask } from './program.js';
+import { clear, column, getCtx, icon, inline, section, setCtx, txt } from '../utils/common.js';
 import { Package } from '../core/package.js';
-import { library } from '../core/index.js';
+import { library, selectPackages } from '../core/index.js';
 import type { QueryOptions } from '../core/shared.js';
-import { darkGrey } from '../utils/color.js';
+import { darkGrey, grey } from '../utils/color.js';
 
 export const infoCmd = new Command()
   .configureHelp(configs)
@@ -35,57 +35,72 @@ const setInfoCmd = new Command()
   .command('set <key=value...>')
   .usage('<key=value...>')
   .description('Set package information.')
-  .action((keyValues: string[]) => {
-    const workspaces = library.query(infoCmd.opts());
+  .action(async (keyValues: string[]) => {
+    const options = infoCmd.opts<FilterOptions>();
+    caption.welcome('information updater!', options?.dry);
+
+    const packages = await selectPackages(library, {
+      ...options,
+      subTitle: 'set information to',
+      cancelMessage: 'Update information cancelled!',
+    });
+
+    if (!packages?.length) {
+      return;
+    }
 
     const keys = keyValues.map((keyVal) => keyVal.split('=')[0]);
 
-    for (const space of workspaces) {
-      if (!space.packages.length) continue;
+    await runTask(
+      packages.map((pkg) => {
+        return {
+          title: column([grey('Setting information for'), txt(pkg.base).color(pkg.color)]),
+          task: async () => {
+            const logs = [];
 
-      inline.print([txt(icon(space.name)).color(space.color).tree(0)]);
+            for (const keyVal of keyValues) {
+              const [key, value] = keyVal.split('=');
+              const current = pkg.get(key);
 
-      for (const pkg of space.packages) {
-        inline.print([txt(pkg.base).color(pkg.color).tree(1), txt(':').darkGrey()]);
+              pkg.set(key, value, false);
 
-        for (const keyVal of keyValues) {
-          const [key, value] = keyVal.split('=');
-          const current = pkg.get(key);
-          pkg.set(key, value, false);
-
-          if (current) {
-            if (current === value) {
-              inline.print([
-                txt(key).align(keys).grey().tree(2),
-                txt(':').darkGrey(),
-                ' ',
-                txt(JSON.stringify(value)).green(),
-              ]);
-            } else {
-              inline.print([
-                txt(key).align(keys).grey().tree(2),
-                txt(':').darkGrey(),
-                ' ',
-                txt(JSON.stringify(current)).red().strike(),
-                ' ',
-                txt('->').darkGrey(),
-                ' ',
-                txt(JSON.stringify(value)).green(),
-              ]);
+              if (current) {
+                if (current === value) {
+                  logs.push(
+                    inline([txt(key).align(keys).grey(), txt(':').darkGrey(), ' ', txt(JSON.stringify(value)).green()])
+                  );
+                } else {
+                  logs.push(
+                    inline([
+                      txt(key).align(keys).grey(),
+                      txt(':').darkGrey(),
+                      ' ',
+                      txt(JSON.stringify(current)).red().strike(),
+                      ' ',
+                      txt('->').darkGrey(),
+                      ' ',
+                      txt(JSON.stringify(value)).green(),
+                    ])
+                  );
+                }
+              } else {
+                logs.push(
+                  inline([txt(key).align(keys).grey(), txt(':').darkGrey(), ' ', txt(JSON.stringify(value)).green()])
+                );
+              }
             }
-          } else {
-            inline.print([
-              txt(key).align(keys).grey().tree(2),
-              txt(':').darkGrey(),
-              ' ',
-              txt(JSON.stringify(value)).green(),
-            ]);
-          }
-        }
 
-        pkg.write();
-      }
-    }
+            if (!options.dry) {
+              pkg.write();
+            }
+
+            return section([column([grey('Updated information for'), txt(pkg.base).color(pkg.color)]), ...logs]);
+          },
+        };
+      })
+    );
+
+    caption.success('Information updated!');
   });
 
 addSharedOptions(setInfoCmd);
@@ -96,26 +111,44 @@ const delInfoCmd = new Command()
   .command('del <keys...>')
   .usage('<keys...>')
   .description('Delete package information.')
-  .action((keys) => {
-    const workspaces = library.query(infoCmd.opts());
+  .action(async (keys) => {
+    const options = infoCmd.opts<FilterOptions>();
 
-    for (const space of workspaces) {
-      if (!space.packages.length) continue;
+    caption.welcome('information removal!', options.dry);
 
-      inline.print([txt(icon(space.name)).color(space.color).tree(0)]);
+    const packages = await selectPackages(library, {
+      ...options,
+      subTitle: 'delete information from',
+      cancelMessage: 'Delete information cancelled!',
+    });
 
-      for (const pkg of space.packages) {
-        inline.print([txt(pkg.base).color(pkg.color).tree(1), txt(':').darkGrey()]);
-
-        for (const key of keys) {
-          pkg.rem(key);
-
-          inline.print([txt(key).red().tree(2).strike()]);
-        }
-
-        pkg.write();
-      }
+    if (!packages?.length) {
+      return;
     }
+
+    await runTask(
+      packages.map((pkg) => {
+        return {
+          title: column([grey('Deleting information from'), txt(pkg.base).color(pkg.color)]),
+          task: async () => {
+            const logs = [];
+
+            for (const key of keys) {
+              pkg.rem(key);
+              logs.push(inline([txt(key).red().strike()]));
+            }
+
+            if (!options.dry) {
+              pkg.write();
+            }
+
+            return section([column([grey('Information deleted from'), txt(pkg.base).color(pkg.color)]), ...logs]);
+          },
+        };
+      })
+    );
+
+    caption.success('Information removal completed!');
   });
 
 addSharedOptions(delInfoCmd);
@@ -124,8 +157,12 @@ infoCmd.addCommand(delInfoCmd);
 export const printInfos = (keys: string[], options: QueryOptions) => {
   const workspaces = library.query({ ...options });
 
+  caption.welcome('package information!');
+
+  txt('').lineTree().print();
+
   inline.print([
-    txt(icon(library.name)).green().beginTree(0),
+    txt(icon(library.name)).green().tree(0),
     txt('[').darkGrey(),
     txt('v' + library.version).yellow(),
     txt(']').darkGrey(),
@@ -146,6 +183,8 @@ export const printInfos = (keys: string[], options: QueryOptions) => {
       inline.print(txt('').lineTree());
     }
   }
+
+  caption.success('Information reading done!');
 };
 
 export const printPkgInfo = (pkg: Package, keys: string[], indent = 0, isEnd = false) => {
@@ -191,12 +230,7 @@ export const printValue = (label: string, value: unknown, indent = 0, isEnd = fa
       lbl.grey();
     }
 
-    inline.print([
-      lbl[isEnd ? 'endTree' : 'tree'](indent),
-      txt(':').darkGrey(),
-      ' ',
-      txt(JSON.stringify(value ?? 'N/A')).green(),
-    ]);
+    inline.print([lbl.tree(indent), txt(':').darkGrey(), ' ', txt(JSON.stringify(value ?? 'N/A')).green()]);
   }
 };
 

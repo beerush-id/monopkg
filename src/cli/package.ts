@@ -1,37 +1,74 @@
 import { Command } from 'commander';
-import { caption, configs } from './program.js';
+import { addOverrides, caption, configs } from './program.js';
 import { mkdirSync, renameSync } from 'node:fs';
-import { column, icon, inline, newLine, txt } from '../utils/common.js';
+import { column, icon, inline, newLine, section, txt } from '../utils/common.js';
 import { shell } from '../utils/shell.js';
 import { listPointers, type PackageMeta, readMeta, writeMeta } from '../core/meta.js';
 import { library, Workspace } from '../core/index.js';
 import { join } from 'node:path';
 import { blue, cyan, darkGrey, green, grey, red, yellow } from '../utils/color.js';
 import { isCancel, select } from '@clack/prompts';
-import { setupPackage } from '../core/template.js';
+import { APP_TEMPLATES, setupPackage, TEMPLATE_CATEGORIES } from '../core/template.js';
 
 const colorMap = [yellow, cyan, green, blue, cyan, cyan, cyan, cyan, cyan, cyan, cyan];
 
 export const createCmd = new Command()
   .configureHelp(configs)
   .command('create [template]')
-  .description('Create package in a workspace from template.')
+  .summary('Create package in a workspace from template.')
+  .description(
+    section([
+      'Create a new package in a workspace from a template.',
+      'If no template is provided, a list of available templates will be shown.',
+    ])
+  )
   .usage('[template]')
+  .option('-l, --list', 'List available templates.')
   .option('-n, --name <name>', 'Package name.')
   .option('-o, --out-path <path>', 'Package location.')
   .option('-c, --cwd-path <path>', 'Working directory and package location.')
-  .option('-r, --root <root>', 'Root workspace.')
+  .option('-w, --workspace <workspace>', 'Set the workspace scope.')
   .action(async (template: string) => {
+    const options = createCmd.opts();
+
+    if (options.list) {
+      caption.welcome('template listing!');
+
+      txt('').lineTree().print();
+
+      for (const g of TEMPLATE_CATEGORIES) {
+        column.print(
+          txt(g.label + ':')
+            .blue()
+            .tree()
+        );
+
+        const templates = APP_TEMPLATES.filter((t) => t.category === g.name).sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+
+        for (const tpl of templates) {
+          column.print([txt(tpl.name).green().tree(1), cyan(`- ${tpl.label}`)]);
+        }
+      }
+
+      return caption.success('Template listing complete.');
+    }
+
     if (!library.workspaces.length) return;
 
-    caption.welcome('package setup wizard!');
+    caption.welcome('package setup wizard!', options.dry);
 
-    let { root } = createCmd.opts();
+    let { workspace: root } = createCmd.opts();
     if (typeof root === 'string') {
       root = [root];
     }
 
-    if (!root) {
+    if (options.yes && !root?.length) {
+      root = [library.workspace.name];
+    }
+
+    if (!root?.length) {
       const result = (await select({
         message: grey('Which workspace to use?'),
         initialValue: library.workspace.name,
@@ -48,7 +85,7 @@ export const createCmd = new Command()
       root = [result];
     }
 
-    const space: Workspace = library.getSpace({ root }) as Workspace;
+    const space: Workspace = library.getSpace({ workspace: root }) as Workspace;
 
     if (root && !space) {
       column.print([red('ERROR_ROOT: Workspace'), green(root), red('not found.')]);
@@ -95,7 +132,7 @@ export const createCmd = new Command()
       return;
     }
 
-    caption.success('Preparation complete. Creating package...');
+    caption.success('Preparation complete.');
 
     inline.print([
       txt(icon(space.name)).color(space.color),
@@ -111,7 +148,9 @@ export const createCmd = new Command()
     if (cwd) {
       column.print([grey('- If prompted, use this as location:'), green('.')]);
 
-      mkdirSync(workDir, { recursive: true });
+      if (!options.dry) {
+        mkdirSync(workDir, { recursive: true });
+      }
     }
 
     const pointers = listPointers(join(library.path, space.path));
@@ -127,6 +166,10 @@ export const createCmd = new Command()
       }),
       ' '
     );
+
+    if (options.dry) {
+      return caption.success('Dry run complete.');
+    }
 
     try {
       await shell(result.command, result.args, { cwd: workDir });
@@ -188,3 +231,5 @@ export const createCmd = new Command()
       }
     }
   });
+
+addOverrides(createCmd);

@@ -8,7 +8,7 @@ export const initCmd = new Command()
   .usage('[directory] [options]')
   .description('Initialize a new project.')
   .option('-n, --name <name>', 'Project name.')
-  .option('-w, --workspaces <workspaces...>', 'Workspaces to create.')
+  .option('-w, --workspace <workspaces...>', 'Workspaces to create.')
   .option('-p, --pm <pm>', 'Package manager (bun, npm, yarn, pnpm).')
   .action(async (path) => {
     await setupProject({ path, isInit: true, ...initCmd.opts() });

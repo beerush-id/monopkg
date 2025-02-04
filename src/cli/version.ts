@@ -12,6 +12,7 @@ export const versionCmd = new Command()
   .command('version [version]')
   .description('Bump or set package version (default: patch)')
   .action(async (version: string) => {
+    const { dry } = versionCmd.opts();
     caption.welcome('version wizard!');
 
     section.print([txt('').lineTree(), txt('Updating package versions.').grey().bullet()]);
@@ -63,7 +64,9 @@ export const versionCmd = new Command()
 
             pkg.meta.version = `${major}.${minor}.${patch}`;
 
-            writeMeta(pkg.pointer.file, pkg.meta);
+            if (!dry) {
+              writeMeta(pkg.pointer.file, pkg.meta);
+            }
 
             return column([
               grey('Package'),

@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { addSharedOptions, configs } from './program.js';
+import { addSharedOptions, caption, configs } from './program.js';
 import { printPkgInfo } from './info.js';
 import { column, icon, inline, txt } from '../utils/common.js';
 import { library } from '../core/index.js';
@@ -17,8 +17,12 @@ export const listCmd = new Command()
     const options = listCmd.opts();
     const workspaces = library.query(options, !options?.info?.length);
 
+    caption.welcome('package listing!');
+
+    txt('').lineTree().print();
+
     inline.print([
-      txt(icon(library.name)).green().beginTree(0),
+      txt(icon(library.name)).green().tree(0),
       txt('[').darkGrey(),
       txt('v' + library.version).yellow(),
       txt(']').darkGrey(),
@@ -34,7 +38,7 @@ export const listCmd = new Command()
       inline.print([txt(icon(workspace.name)).tree(0).color(workspace.color), txt(':').darkGrey()]);
 
       if (!workspace.packages.length) {
-        inline.print([txt('<empty>')[isEnd ? 'endTree' : 'tree'](1).darkGrey()]);
+        inline.print([txt('<empty>').tree(1).darkGrey()]);
       }
 
       for (const pkg of workspace.packages) {
@@ -48,7 +52,7 @@ export const listCmd = new Command()
           }
         } else {
           column.print([
-            txt(pkg.base).color(pkg.color)[isEnd && isLast ? 'endTree' : 'tree'](1),
+            txt(pkg.base).color(pkg.color).tree(1),
             txt(pkg.name).cyan(),
             txt(pkg.version).yellow(),
             txt(`(${pkg.path})`).grey(),
@@ -60,6 +64,8 @@ export const listCmd = new Command()
         inline.print(txt('').lineTree());
       }
     }
+
+    caption.success('Listing complete!');
   });
 
 addSharedOptions(listCmd);

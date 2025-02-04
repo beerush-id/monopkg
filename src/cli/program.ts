@@ -14,19 +14,50 @@ export const configs: HelpConfiguration = {
   styleDescriptionText: (str: string) => grey(str.replace(/^[a-z]/, (c) => c.toUpperCase())),
 };
 
+export type OverrideOptions = {
+  dry: boolean;
+  yes: boolean;
+};
+export function addOverrides(command: Command) {
+  command.option('-y, --yes', 'Skip interactive prompts and use default options.');
+  command.option('--dry', 'Dry run without making changes.');
+}
+
+export type FilterOptions = OverrideOptions & {
+  exclude: string[];
+  filter: string[];
+  workspace: string[];
+};
 export function addSharedOptions(command: Command, multi = true) {
+  command.option('-e, --exclude <packages...>', 'Excluded packages (default: none).');
+  command.option('-f, --filter <packages...>', 'Filter packages to be included (default: all).');
+
   if (multi) {
-    command.option('-r, --root <roots...>', 'Root workspaces (default: none).');
+    command.option('-w, --workspace <workspaces...>', 'Filter packages by workspace (default: all).');
   } else {
-    command.option('-r, --root <root>', 'Root workspace.');
+    command.option('-w, --workspace <workspace>', 'Set the workspace scope.');
   }
 
-  command.option('-f, --filter <packages...>', 'Filter packages to be included (default: none).');
-  command.option('-e, --exclude <packages...>', 'Excluded packages (default: none).');
+  addOverrides(command);
+}
+
+export type SaveOptions = {
+  dev: boolean;
+  optional: boolean;
+  peer: boolean;
+};
+export function addSharedSaveOptions(command: Command, action: string) {
+  command.option('-d, --dev', `${action} as ${cyan('devDependencies')}.`);
+  command.option('-o, --optional', `${action} as ${cyan('optionalDependencies')}.`);
+  command.option('-p, --peer', `${action} as ${cyan('peerDependencies')}.`);
 }
 
 export const caption = {
-  welcome: (message: string) => {
+  welcome: (message: string, dry?: boolean) => {
+    if (dry) {
+      section.print(['', txt(' Running in dry mode. No changes will be made. ').fillYellow().exec().black()]);
+    }
+
     inline.print('');
     intro(
       inline([
@@ -88,7 +119,7 @@ export async function runTask(tasks: TaskInit | TaskInit[]) {
   }
 
   for (const task of tasks) {
-    section.print([txt('').lineTree(), txt(task.title).bullet()]);
+    writeExec(task.title);
 
     if (task.message) {
       section.print(txt(task.message).tree());
@@ -98,10 +129,30 @@ export async function runTask(tasks: TaskInit | TaskInit[]) {
     const result = await task.task();
 
     if (result) {
-      section.print([txt('').lineTree(), txt(result).bullet()]);
+      writeDone(result);
     }
   }
 }
+
+export const writeExec = (message: string) => {
+  message.split('\n').forEach((line, i) => {
+    if (i === 0) {
+      section.print([txt('').lineTree(), txt(line).exec()]);
+    } else {
+      section.print(txt(line).tree());
+    }
+  });
+};
+
+export const writeDone = (message: string) => {
+  message.split('\n').forEach((line, i) => {
+    if (i === 0) {
+      section.print(txt(line).done());
+    } else {
+      section.print(txt(line).tree());
+    }
+  });
+};
 
 export const writeLine = (message: string | ArrayBuffer) => {
   const text = message.toString().trim();
