@@ -10,36 +10,29 @@ Use the following command to run scripts in all packages:
 ::: code-group
 
 ```bash [Global]
-monopkg run <scripts...> [global-options]
+monopkg run <scripts...>
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg run <scripts...> [global-options]
+bun x monopkg run <scripts...>
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg run <scripts...> [global-options]
+npx monopkg run <scripts...>
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg run <scripts...> [global-options]
+yarn dlx monopkg run <scripts...>
 ```
-
-:::
-
-::: info Global Options
-
-- **`-F`**, `--filter` - Include specific packages.
-- **`-E`**, `--exclude` - Exclude specific packages.
-- **`-R`**, `--root` - Root workspaces of the packages.
-
-See the [Global Options](../guides/usage#global-options) page for more details.
 
 :::
 
 ## Options
 
-- `-B, --before-run <scripts...>` - Execute scripts before the main script.
+- **`-b`**, `--before-run` **`<scripts...>`** - Execute scripts before the main script.
+- **`-f`**, `--filter` **`<packages...>`** - Include specific packages.
+- **`-e`**, `--exclude` **`<packages...>`** - Exclude specific packages.
+- **`-w`**, `--workspace` **`<workspaces...>`** - Root workspaces of the packages.
 
 ::: info Note
 
@@ -60,15 +53,15 @@ monopkg run build
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg run build
+bun x monopkg run build
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg run build
+npx monopkg run build
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg run build
+yarn dlx monopkg run build
 ```
 
 :::
@@ -84,15 +77,15 @@ monopkg run build --before-run clean
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg run build --before-run clean
+bun x monopkg run build --before-run clean
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg run build --before-run clean
+npx monopkg run build --before-run clean
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg run build --before-run clean
+yarn dlx monopkg run build --before-run clean
 ```
 
 :::
@@ -104,19 +97,19 @@ Run `dev:esm` and `dev:cjs` scripts in the `apps` and `tools` workspaces.
 ::: code-group
 
 ```bash [Global]
-monopkg run dev:esm dev:cjs -R apps tools
+monopkg run dev:esm dev:cjs -w apps tools
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg run dev:esm dev:cjs -R apps tools
+bun x monopkg run dev:esm dev:cjs -w apps tools
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg run dev:esm dev:cjs -R apps tools
+npx monopkg run dev:esm dev:cjs -w apps tools
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg run dev:esm dev:cjs -R apps tools
+yarn dlx monopkg run dev:esm dev:cjs -w apps tools
 ```
 
 :::
@@ -128,19 +121,19 @@ Run `test` script in `package-a` and `package-b`
 ::: code-group
 
 ```bash [Global]
-monopkg run test -F package-a package-b
+monopkg run test -f package-a package-b
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg run test -F package-a package-b
+bun x monopkg run test -f package-a package-b
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg run test -F package-a package-b
+npx monopkg run test -f package-a package-b
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg run test -F package-a package-b
+yarn dlx monopkg run test -f package-a package-b
 ```
 
 :::

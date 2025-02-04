@@ -3,13 +3,6 @@
 Workspaces are folders that contain packages or applications. In a monorepo, workspaces are used to group related
 packages and applications together. In this guide, you will learn how to add new workspaces to your monorepo.
 
-::: tip FYI
-
-This command can also be used to initialize a new, simple monorepo workspace in an existing project. If the root
-`package.json` contains a `workspaces` field, it will be considered a monorepo workspace.
-
-:::
-
 ## Command
 
 This command allows you to add new workspaces to the monorepo.
@@ -17,20 +10,26 @@ This command allows you to add new workspaces to the monorepo.
 ::: code-group
 
 ```bash [Global]
-monopkg add-space <spaces...> [options]
+monopkg workspace add [workspaces...] [options]
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg add-space <spaces...> [options]
+bun x monopkg workspace add [workspaces...] [options]
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg add-space <spaces...> [options]
+npx monopkg workspace add [workspaces...] [options]
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg add-space <spaces...> [options]
+yarn dlx monopkg workspace add [workspaces...] [options]
 ```
+
+:::
+
+::: tip FYI
+
+In the interactive mode, you can enter multiple workspace name to be added. The prompt will keep asking for the workspace name until you press `Enter` without entering a name.
 
 :::
 
@@ -47,19 +46,19 @@ Add a new workspace named `tools`:
 ::: code-group
 
 ```bash [Global]
-monopkg add-space tools
+monopkg workspace add tools
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg add-space tools
+bun x monopkg workspace add tools
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg add-space tools
+npx monopkg workspace add tools
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg add-space tools
+yarn dlx monopkg workspace add tools
 ```
 
 :::
@@ -99,19 +98,19 @@ Add multiple workspaces named `tools` and `apps`:
 ::: code-group
 
 ```bash [Global]
-monopkg add-space tools apps
+monopkg workspace add tools apps
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg add-space tools apps
+bun x monopkg workspace add tools apps
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg add-space tools apps
+npx monopkg workspace add tools apps
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg add-space tools apps
+yarn dlx monopkg workspace add tools apps
 ```
 
 :::
@@ -156,19 +155,19 @@ Add a new workspace named `tools` and skip creating the workspace folder:
 ::: code-group
 
 ```bash [Global]
-monopkg add-space tools --cold
+monopkg workspace add tools --cold
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg add-space tools --cold
+bun x monopkg workspace add tools --cold
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg add-space tools --cold
+npx monopkg workspace add tools --cold
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg add-space tools --cold
+yarn dlx monopkg workspace add tools --cold
 ```
 
 :::

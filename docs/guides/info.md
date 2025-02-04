@@ -16,30 +16,20 @@ To manage the package information, you can use the following command:
 ::: code-group
 
 ```bash [Global]
-monopkg info [command] [global-options]
+monopkg info [command]
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info [command] [global-options]
+bun x monopkg info [command]
 ```
 
 ```sh [NPM]
-npx @beerush/monopkg info [command] [global-options]```
+npx monopkg info [command]```
 ```
 
 ```sh [Yarn]
-yarn x @beerush/monopkg info [command] [global-options]
+yarn dlx monopkg info [command]
 ```
-
-:::
-
-::: info Global Options
-
-- **`-F`**, `--filter` - Include specific packages.
-- **`-E`**, `--exclude` - Exclude specific packages.
-- **`-R`**, `--root` - Root workspaces of the packages.
-
-See the [Global Options](../guides/usage#global-options) page for more details.
 
 :::
 
@@ -51,6 +41,9 @@ See the [Global Options](../guides/usage#global-options) page for more details.
 
 ### Options
 
+- **`-f`**, `--filter` **`<packages...>`** - Include specific packages.
+- **`-e`**, `--exclude` **`<packages...>`** - Exclude specific packages.
+- **`-w`**, `--workspace` **`<workspaces...>`** - Root workspaces of the packages.
 - **`--sort`** - Sort the output keys.
 
 ::: tip Tips
@@ -75,44 +68,22 @@ monopkg info
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info
+bun x monopkg info
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info
+npx monopkg info
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info
+yarn dlx monopkg info
 ```
 
 :::
 
-::: details Sample Output
+::: info Sample Output
 
-```sh
-Packages in @beerush/openpkg[v0.0.1]:
-
-- ⚡apps:
-  - docs:
-    - name        : "docs"
-    - version     : "0.0.1"
-    - description : N/A
-    - type        : "module"
-
-  - web:
-    - name        : "web"
-    - version     : "0.0.1"
-    - description : N/A
-    - type        : "module"
-
-- ⚡utils:
-  - monopkg:
-    - name        : "@beerush/monopkg"
-    - version     : "0.0.1"
-    - description : "Monorepo Package Manager"
-    - type        : "module"
-```
+![Basic Package Information](/info-basic.jpg)
 
 :::
 
@@ -123,19 +94,19 @@ Print the basic package information of `package-a` and `package-b`.
 ::: code-group
 
 ```bash [Global]
-monopkg info -F package-a package-b
+monopkg info -f package-a package-b
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info -F package-a package-b
+bun x monopkg info -f package-a package-b
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info -F package-a package-b
+npx monopkg info -f package-a package-b
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info -F package-a package-b
+yarn dlx monopkg info -f package-a package-b
 ```
 
 :::
@@ -147,19 +118,19 @@ Print the basic package information of all packages in the `apps` and `utils` wo
 ::: code-group
 
 ```bash [Global]
-monopkg info -R apps utils
+monopkg info -w apps utils
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info -R apps utils
+bun x monopkg info -w apps utils
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info -R apps utils
+npx monopkg info -w apps utils
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info -R apps utils
+yarn dlx monopkg info -w apps utils
 ```
 
 :::
@@ -179,15 +150,15 @@ monopkg info get author
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info get author
+bun x monopkg info get author
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info get author
+npx monopkg info get author
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info get author
+yarn dlx monopkg info get author
 ```
 
 :::
@@ -199,48 +170,26 @@ Get the `dependencies`, `author` and `license` information of all packages under
 ::: code-group
 
 ```bash [Global]
-monopkg info get dependencies author license -R apps utils
+monopkg info get dependencies author license -w apps utils
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info get dependencies author license -R apps utils
+bun x monopkg info get dependencies author license -w apps utils
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info get dependencies author license -R apps utils
+npx monopkg info get dependencies author license -w apps utils
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info get dependencies author license -R apps utils
+yarn dlx monopkg info get dependencies author license -w apps utils
 ```
 
 :::
 
-::: details Sample Output
+::: info Sample Output
 
-```sh
-Packages in @beerush/opendb[v0.0.1]:
-
-- ⚡apps:
-  - docs:
-    - author       : "Beerush"
-    - dependencies :
-      - @beerush/opendb-ui : "*"
-    - license      : "ISC"
-
-  - web:
-    - author       : "Beerush"
-    - dependencies :
-      - @beerush/opendb-ui : "*"
-    - license      : "ISC"
-
-- ⚡utils:
-  - monopkg:
-    - author       : "Beerush"
-    - dependencies :
-      - commander : "^13.1.0"
-    - license      : "MIT"
-```
+![Multiple Keys Information](/info.jpg)
 
 :::
 
@@ -251,19 +200,19 @@ Get the `author.name` and `publishConfig.access` information of `package-a` and 
 ::: code-group
 
 ```bash [Global]
-monopkg info get author.name publishConfig.access -F package-a package-b
+monopkg info get author.name publishConfig.access -f package-a package-b
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info get author.name publishConfig.access -F package-a package-b
+bun x monopkg info get author.name publishConfig.access -f package-a package-b
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info get author.name publishConfig.access -F package-a package-b
+npx monopkg info get author.name publishConfig.access -f package-a package-b
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info get author.name publishConfig.access -F package-a package-b
+yarn dlx monopkg info get author.name publishConfig.access -f package-a package-b
 ```
 
 :::
@@ -283,15 +232,15 @@ monopkg info set author="John Doe <john@domain.com>"
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info set author="John Doe <john@domain.com>"
+bun x monopkg info set author="John Doe <john@domain.com>"
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info set author="John Doe <john@domain.com>"
+npx monopkg info set author="John Doe <john@domain.com>"
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info set author="John Doe <john@dmain.com>"
+yarn dlx monopkg info set author="John Doe <john@dmain.com>"
 ```
 
 :::
@@ -303,19 +252,19 @@ Set the `author` and `license` information for all packages under the `apps` and
 ::: code-group
 
 ```bash [Global]
-monopkg info set author="John Doe" license="MIT" -R apps utils
+monopkg info set author="John Doe" license="MIT" -w apps utils
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info set author="John Doe" license="MIT" -R apps utils
+bun x monopkg info set author="John Doe" license="MIT" -w apps utils
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info set author="John Doe" license="MIT" -R apps utils
+npx monopkg info set author="John Doe" license="MIT" -w apps utils
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info set author="John Doe" license="MIT" -R apps utils
+yarn dlx monopkg info set author="John Doe" license="MIT" -w apps utils
 ```
 
 :::
@@ -327,19 +276,19 @@ Set the `author.name` and `publishConfig.access` information for `package-a` and
 ::: code-group
 
 ```bash [Global]
-monopkg info set author.name="John Doe" publishConfig.access="public" -F package-a package-b
+monopkg info set author.name="John Doe" publishConfig.access="public" -f package-a package-b
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info set author.name="John Doe" publishConfig.access="public" -F package-a package-b
+bun x monopkg info set author.name="John Doe" publishConfig.access="public" -f package-a package-b
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info set author.name="John Doe" publishConfig.access="public" -F package-a package-b
+npx monopkg info set author.name="John Doe" publishConfig.access="public" -f package-a package-b
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info set author.name="John Doe" publishConfig.access="public" -F package-a package-b
+yarn dlx monopkg info set author.name="John Doe" publishConfig.access="public" -f package-a package-b
 ```
 
 :::
@@ -365,15 +314,15 @@ monopkg info del author
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info del author
+bun x monopkg info del author
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info del author
+npx monopkg info del author
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info del author
+yarn dlx monopkg info del author
 ```
 
 :::
@@ -385,19 +334,19 @@ Delete the `author` and `license` information for all packages under the `apps` 
 ::: code-group
 
 ```bash [Global]
-monopkg info del author license -R apps utils
+monopkg info del author license -w apps utils
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info del author license -R apps utils
+bun x monopkg info del author license -w apps utils
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info del author license -R apps utils
+npx monopkg info del author license -w apps utils
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info del author license -R apps utils
+yarn dlx monopkg info del author license -w apps utils
 ```
 
 :::
@@ -409,19 +358,19 @@ Delete the `author.name` and `publishConfig.access` information for `package-a` 
 ::: code-group
 
 ```bash [Global]
-monopkg info del author.name publishConfig.access -F package-a package-b
+monopkg info del author.name publishConfig.access -f package-a package-b
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg info del author.name publishConfig.access -F package-a package-b
+bun x monopkg info del author.name publishConfig.access -f package-a package-b
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg info del author.name publishConfig.access -F package-a package-b
+npx monopkg info del author.name publishConfig.access -f package-a package-b
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg info del author.name publishConfig.access -F package-a package-b
+yarn dlx monopkg info del author.name publishConfig.access -f package-a package-b
 ```
 
 :::

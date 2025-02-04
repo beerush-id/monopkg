@@ -9,55 +9,77 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Guides', link: '/guides/overview', activeMatch: '/guides/' },
+      { text: 'Guides', link: '/intro/overview', activeMatch: '/intro/' },
     ],
 
     sidebar: [
       {
         text: 'Introduction',
-        collapsed: false,
         items: [
           {
             text: 'Overview',
-            link: '/guides/overview',
+            link: '/intro/overview',
           },
+          {
+            text: 'Features',
+            link: '/intro/features',
+          },
+          {
+            text: 'Usage',
+            link: '/intro/usage',
+          },
+        ],
+      },
+      {
+        text: 'Guides',
+        items: [
           {
             text: 'Getting Started',
             link: '/guides/getting-started',
           },
           {
-            text: 'Usage',
-            link: '/guides/usage',
-          },
-        ],
-      },
-      {
-        text: 'References',
-        collapsed: false,
-        items: [
-          { text: 'Add Dependencies', link: '/references/add' },
-          { text: 'Add Scripts', link: '/references/add-script' },
-          { text: 'Add Workspace', link: '/references/add-space' },
-          { text: 'Create Package', link: '/references/create' },
-          { text: 'Init Package', link: '/references/init' },
-          { text: 'Link Dependencies', link: '/references/link' },
-          { text: 'List Packages', link: '/references/list' },
-          {
-            text: 'Package Info',
-            link: '/references/info',
+            text: 'Dependencies',
+            collapsed: true,
             items: [
-              { text: 'Get Info', link: '/references/info#get-information' },
-              { text: 'Set Info', link: '/references/info#set-information' },
-              { text: 'Delete Info', link: '/references/info#delete-information' },
+              { text: 'Add Dependencies', link: '/guides/add' },
+              { text: 'Remove Dependencies', link: '/guides/remove' },
+              { text: 'Link Dependencies', link: '/guides/link' },
+              { text: 'Unlink Dependencies', link: '/guides/unlink' },
             ],
           },
-          { text: 'Remove Dependencies', link: '/references/remove' },
-          { text: 'Remove Script', link: '/references/remove-script' },
-          { text: 'Remove Workspace', link: '/references/remove-space' },
-          { text: 'Run Scripts', link: '/references/run' },
-          { text: 'Unlink Dependencies', link: '/references/unlink' },
-          { text: 'Use Packages', link: '/references/use' },
-          { text: 'Versioning', link: '/references/version' },
+          {
+            text: 'Packages',
+            collapsed: true,
+            items: [
+              { text: 'Create Package', link: '/guides/create' },
+              { text: 'List Packages', link: '/guides/list' },
+              { text: 'Link Packages', link: '/guides/attach' },
+              { text: 'Unlink Packages', link: '/guides/detach' },
+              { text: 'Get Package Info', link: '/guides/info#get-information' },
+              { text: 'Set Package Info', link: '/guides/info#set-information' },
+              { text: 'Delete Package Info', link: '/guides/info#delete-information' },
+            ],
+          },
+          {
+            text: 'Scripts',
+            collapsed: true,
+            items: [
+              { text: 'Add Script', link: '/guides/add-script' },
+              { text: 'Inspect Scripts', link: '/guides/inspect-script' },
+              { text: 'Remove Script', link: '/guides/remove-script' },
+              { text: 'Run Script', link: '/guides/run' },
+            ],
+          },
+          {
+            text: 'Workspaces',
+            collapsed: true,
+            items: [
+              { text: 'Add Workspace', link: '/guides/add-space' },
+              { text: 'Initialize Project', link: '/guides/init' },
+              { text: 'Remove Workspace', link: '/guides/remove-space' },
+            ],
+          },
+          { text: 'Versioning', link: '/guides/version' },
         ],
       },
     ],

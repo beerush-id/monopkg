@@ -34,30 +34,30 @@ Use the following command to link internal packages to all packages in the monor
 ::: code-group
 
 ```bash [Global]
-monopkg use <package-name> [global-options]
+monopkg use <package-name>
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg use <package-name> [global-options]
+bun x monopkg use <package-name>
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg use <package-name> [global-options]
+npx monopkg use <package-name>
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg use <package-name> [global-options]
+yarn dlx monopkg use <package-name>
 ```
 
 :::
 
 ::: info Global Options
 
-- **`-F`**, `--filter` - Include specific packages.
-- **`-E`**, `--exclude` - Exclude specific packages.
-- **`-R`**, `--root` - Root workspaces of the packages.
+- **`-f`**, `--filter` **`<packages...>`** - Include specific packages.
+- **`-e`**, `--exclude` **`<packages...>`** - Exclude specific packages.
+- **`-w`**, `--workspace` **`<workspaces...>`** - Root workspaces of the packages.
 
-See the [Global Options](../guides/usage#global-options) page for more details.
+See the [Global Options](../intro/usage#global-options) page for more details.
 
 :::
 
@@ -85,15 +85,15 @@ monopkg use ui
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg use ui
+bun x monopkg use ui
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg use ui
+npx monopkg use ui
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg use ui
+yarn dlx monopkg use ui
 ```
 
 :::
@@ -125,19 +125,19 @@ Use `ui` and `core` packages as `devDependencies` in `app-a` and `util-b` packag
 ::: code-group
 
 ```bash [Global]
-monopkg use -D ui core -F app-a util-b -R apps utils
+monopkg use -D ui core -f app-a util-b -w apps utils
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg use -D ui core -F app-a util-b -R apps utils
+bun x monopkg use -D ui core -f app-a util-b -w apps utils
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg use -D ui core -F app-a util-b -R apps utils
+npx monopkg use -D ui core -f app-a util-b -w apps utils
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg use -D ui core -F app-a util-b -R apps utils
+yarn dlx monopkg use -D ui core -f app-a util-b -w apps utils
 ```
 
 :::

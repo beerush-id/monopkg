@@ -1,4 +1,4 @@
-# Adding Dependencies
+# Add Dependencies
 
 In a monorepo, you may have multiple packages that share common dependencies. To avoid installing the same dependencies
 multiple times, you can use the `monopkg add` command to install dependencies for all packages in the monorepo at once.
@@ -16,37 +16,31 @@ This command allows you to install dependencies for all packages in the monorepo
 ::: code-group
 
 ```bash [Global]
-monopkg add [options] <dependencies...> [global-options]
+monopkg add [options] <dependencies...>
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg add [options] <dependencies...> [global-options]
+bun x monopkg add [options] <dependencies...>
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg add [options] <dependencies...> [global-options]
+npx monopkg add [options] <dependencies...>
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg add [options] <dependencies...> [global-options]
+yarn dlx monopkg add [options] <dependencies...>
 ```
-
-:::
-
-::: info Global Options
-
-- **`-F`**, `--filter` - Include specific packages.
-- **`-E`**, `--exclude` - Exclude specific packages.
-- **`-R`**, `--root` - Root workspaces of the packages.
-
-See the [Global Options](../guides/usage#global-options) page for more details.
 
 :::
 
 ## Options
 
-- **`-D`**, `--dev` - Install as dev dependencies.
-- **`-P`**, `--peer` - Install as peer dependencies.
+- **`-f`**, `--filter` **`<packages...>`** - Include specific packages.
+- **`-e`**, `--exclude` **`<packages...>`** - Exclude specific packages.
+- **`-w`**, `--workspace` **`<workspaces...>`** - Root workspaces of the packages.
+- **`-d`**, `--dev` - Install as dev dependencies.
+- **`-p`**, `--peer` - Install as peer dependencies.
+- **`-o`**, `--optional` - Install as optional dependencies.
 
 ## Examples
 
@@ -61,15 +55,15 @@ monopkg add lodash
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg add lodash
+bun x monopkg add lodash
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg add lodash
+npx monopkg add lodash
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg add lodash
+yarn dlx monopkg add lodash
 ```
 
 :::
@@ -126,19 +120,19 @@ Add `lodash` to `package-a` and `package-b`.
 ::: code-group
 
 ```bash [Global]
-monopkg add lodash -F package-a package-b
+monopkg add lodash -f package-a package-b
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg add lodash -F package-a package-b
+bun x monopkg add lodash -f package-a package-b
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg add lodash -F package-a package-b
+npx monopkg add lodash -f package-a package-b
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg add lodash -F package-a package-b
+yarn dlx monopkg add lodash -f package-a package-b
 ```
 
 :::
@@ -159,19 +153,19 @@ Add `lodash` and `typescript` as `devDependencies` to all packages in the monore
 ::: code-group
 
 ```bash [Global]
-monopkg add -D lodash typescript
+monopkg add -d lodash typescript
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg add -D lodash typescript
+bun x monopkg add -d lodash typescript
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg add -D lodash typescript
+npx monopkg add -d lodash typescript
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg add -D lodash typescript
+yarn dlx monopkg add -d lodash typescript
 ```
 
 :::
@@ -180,10 +174,10 @@ yarn x @beerush/monopkg add -D lodash typescript
 
 The command above is equivalent to running the following commands for each package in the monorepo:
 
-- `cd ./packages/pkg-a && bun add -D lodash typescript`
-- `cd ./packages/pkg-b && bun add -D lodash typescript`
-- `cd ./packages/pkg-c && bun add -D lodash typescript`
-- `cd ./packages/pkg-d && bun add -D lodash typescript`
+- `cd ./packages/pkg-a && bun add -d lodash typescript`
+- `cd ./packages/pkg-b && bun add -d lodash typescript`
+- `cd ./packages/pkg-c && bun add -d lodash typescript`
+- `cd ./packages/pkg-d && bun add -d lodash typescript`
 - _and so on_.
 
 :::
@@ -195,19 +189,19 @@ Add `lodash` and `typescript` as `peerDependencies` to all packages in the monor
 ::: code-group
 
 ```bash [Global]
-monopkg add -P lodash typescript -E package-a
+monopkg add -p lodash typescript -e package-a
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg add -P lodash typescript -E package-a
+bun x monopkg add -p lodash typescript -e package-a
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg add -P lodash typescript -E package-a
+npx monopkg add -p lodash typescript -e package-a
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg add -P lodash typescript -E package-a
+yarn dlx monopkg add -p lodash typescript -e package-a
 ```
 
 :::
@@ -217,9 +211,9 @@ yarn x @beerush/monopkg add -P lodash typescript -E package-a
 The command above is equivalent to running the following commands for each package in the monorepo, except
 `package-a`:
 
-- `cd ./packages/pkg-b && bun add -P lodash typescript`
-- `cd ./packages/pkg-c && bun add -P lodash typescript`
-- `cd ./packages/pkg-d && bun add -P lodash typescript`
+- `cd ./packages/pkg-b && bun add -p lodash typescript`
+- `cd ./packages/pkg-c && bun add -p lodash typescript`
+- `cd ./packages/pkg-d && bun add -p lodash typescript`
 - _and so on_.
 
 :::
@@ -231,19 +225,19 @@ Add `lodash` to all packages in the `apps` workspace.
 ::: code-group
 
 ```bash [Global]
-monopkg add lodash -R apps
+monopkg add lodash -w apps
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg add lodash -R apps
+bun x monopkg add lodash -w apps
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg add lodash -R apps
+npx monopkg add lodash -w apps
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg add lodash -R apps
+yarn dlx monopkg add lodash -w apps
 ```
 
 :::
@@ -267,19 +261,19 @@ Add `eslint` and `typesript` as `devDependencies` to all packages in the `apps` 
 ::: code-group
 
 ```bash [Global]
-monopkg add -D eslint typescript -R apps utils -E app-a util-a
+monopkg add -d eslint typescript -w apps utils -e app-a util-a
 ```
 
 ```bash [Bun]
-bun x @beerush/monopkg add -D eslint typescript -R apps utils -E app-a util-a
+bun x monopkg add -d eslint typescript -w apps utils -e app-a util-a
 ```
 
 ```bash [NPM]
-npx @beerush/monopkg add -D eslint typescript -R apps utils -E app-a util-a
+npx monopkg add -d eslint typescript -w apps utils -e app-a util-a
 ```
 
 ```bash [Yarn]
-yarn x @beerush/monopkg add -D eslint typescript -R apps utils -E app-a util-a
+yarn dlx monopkg add -d eslint typescript -w apps utils -e app-a util-a
 ```
 
 :::
@@ -288,10 +282,10 @@ yarn x @beerush/monopkg add -D eslint typescript -R apps utils -E app-a util-a
 
 The command above is equivalent to running the following commands:
 
-- `cd ./apps/app-b && bun add -D eslint typescript`
-- `cd ./apps/app-c && bun add -D eslint typescript`
-- `cd ./apps/app-d && bun add -D eslint typescript`
-- `cd ./utils/util-b && bun add -D eslint typescript`
-- `cd ./utils/util-c && bun add -D eslint typescript`
+- `cd ./apps/app-b && bun add -d eslint typescript`
+- `cd ./apps/app-c && bun add -d eslint typescript`
+- `cd ./apps/app-d && bun add -d eslint typescript`
+- `cd ./utils/util-b && bun add -d eslint typescript`
+- `cd ./utils/util-c && bun add -d eslint typescript`
 
 :::
