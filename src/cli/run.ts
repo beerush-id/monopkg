@@ -50,7 +50,7 @@ export const runCmd = new Command()
     }
 
     if (beforeRun?.length) {
-      const beforeStacks = packages.map((pkg) => pkg.runStacks(beforeRun)).flat();
+      const beforeStacks = standalone ? packages : packages.map((pkg) => pkg.runStacks(beforeRun)).flat();
       setCtx('max-space', getMaxExecLabel(beforeStacks));
 
       section.print([
@@ -75,7 +75,7 @@ export const runCmd = new Command()
 
     STACK_RESOLVES.clear();
 
-    const stacks = packages.map((pkg) => pkg.runStacks(scripts)).flat();
+    const stacks = standalone ? packages : packages.map((pkg) => pkg.runStacks(scripts)).flat();
     setCtx('max-space', getMaxExecLabel(stacks));
 
     section.print([
