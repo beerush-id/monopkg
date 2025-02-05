@@ -142,6 +142,80 @@ To skip the interactive prompts, you can use `-y` or `--yes` option. It will use
 
 :::
 
+## Filtering
+
+Most of the commands support filtering options. Filtering allows you to include or exclude specific packages from the command.
+
+### Options
+
+- **`-f`**, `--filter` `<packages...>` - Include specific packages.
+- **`-e`**, `--exclude` `<packages...>` - Exclude specific packages.
+- **`-w`**, `--workspace` `<workspaces...>` - Filter by workspaces of the packages.
+
+::: tip TIPS
+
+- You can use the package name as the filter. E.g., `-f @scope/pkg-a`.
+- You can use the package's base name as the filter. E.g., `-f pkg-a`.
+- You can use the package's base name pattern as the filter. E.g., `-f pkg-*`.
+- You can use the package's path as the filter. E.g., `-f apps/pkg-a`.
+- You can use the package's path pattern as the filter. E.g., `-f apps/*`.
+
+::::
+
+### Filter
+
+To include specific packages, you can use the `--filter` option. It will only include the packages that match the filter. Example:
+
+::: code-group
+
+```sh [Global]
+monopkg run dev --filter package-1 package-2
+```
+
+```sh [Bun]
+bun x monopkg run dev --filter package-1 package-2
+```
+
+```sh [NPM]
+npx monopkg run dev --filter package-1 package-2
+```
+
+```sh [Yarn]
+yarn dlx monopkg run dev --filter package-1 package-2
+```
+
+:::
+
+::: tip TIPS
+
+To include all packages, you can use the `--filter *` option. It will skip the interactive prompts and include all packages.
+
+:::
+
+### Workspace Filter
+
+To filter by workspaces of the packages, you can use the `--workspace` option. It will limit the packages in interactive mode to the specified workspaces. Example:
+
+::: code-group
+
+```sh [Global]
+monopkg run dev --workspace apps
+```
+
+```sh [Bun]
+bun x monopkg run dev --workspace apps
+```
+
+```sh [NPM]
+npx monopkg run dev --workspace apps
+```
+
+```sh [Yarn]
+yarn dlx monopkg run dev --workspace apps
+```
+
+:::
+
 ## Dry Run
 
 To run the command in `dry` mode, you can use the `--dry` option. It will show you the commands that will be executed without actually running them. No changes will be made to the project. Example:

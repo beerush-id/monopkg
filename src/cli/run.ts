@@ -9,10 +9,12 @@ export const runCmd = new Command()
   .configureHelp(configs)
   .command('run <scripts...>')
   .description('Run scripts in packages.')
-  .option('-s, --sequential', 'Run scripts sequentially.')
   .option('-b, --before-run <scripts...>', 'Run scripts before the main script.')
+  .option('-s, --strict', 'Wait for the dependencies to be resolved before running the script.')
+  .option('--standalone', 'Run scripts in standalone mode without resolving dependencies.')
+  .option('--sequential', 'Run scripts sequentially.')
   .action(async (scripts: string[] = []) => {
-    const { beforeRun = [], sequential, dry } = runCmd.opts();
+    const { beforeRun = [], sequential, dry, strict, standalone } = runCmd.opts();
 
     caption.welcome('script runner!', dry);
 
@@ -62,10 +64,10 @@ export const runCmd = new Command()
 
       if (sequential) {
         for (const pkg of packages) {
-          await pkg.run(beforeRun, true, undefined, dry);
+          await pkg.run(beforeRun, { sequential, strict, standalone, dry });
         }
       } else {
-        await Promise.all(packages.map((pkg) => pkg.run(beforeRun, false, undefined, dry)));
+        await Promise.all(packages.map((pkg) => pkg.run(beforeRun, { sequential, strict, standalone, dry })));
       }
 
       section.print([txt('').lineTree(), txt(' Before-run script execution completed. ').black().fillGreen().done()]);
@@ -84,10 +86,10 @@ export const runCmd = new Command()
 
     if (sequential) {
       for (const pkg of packages) {
-        await pkg.run(scripts, true, undefined, dry);
+        await pkg.run(scripts, { sequential, strict, standalone, dry });
       }
     } else {
-      await Promise.all(packages.map((pkg) => pkg.run(scripts, false, undefined, dry)));
+      await Promise.all(packages.map((pkg) => pkg.run(scripts, { sequential, strict, standalone, dry })));
     }
 
     caption.success('Script execution completed.');

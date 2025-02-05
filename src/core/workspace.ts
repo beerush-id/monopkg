@@ -1,4 +1,4 @@
-import { LIBRARIES, Package, WORKSPACE_PACKAGES, WORKSPACES } from './package.js';
+import { LIBRARIES, matchPkg, Package, WORKSPACE_PACKAGES, WORKSPACES } from './package.js';
 import { type Library } from './library.js';
 import { BASE_COLOR, PKG_QUERY_OPTIONS, type QueryOptions } from './shared.js';
 import { list } from './meta.js';
@@ -87,16 +87,12 @@ export class Workspace {
       const results = [];
 
       for (const pkg of packages) {
-        results.push(await pkg.run(scripts, sequential));
+        results.push(await pkg.run(scripts, { sequential }));
       }
 
       return results;
     }
 
-    return await Promise.all(packages.map((pkg) => pkg.run(scripts)));
+    return await Promise.all(packages.map((pkg) => pkg.run(scripts, { sequential })));
   }
 }
-
-const matchPkg = (pkg: Package, ...names: string[]) => {
-  return names.includes(pkg.name) || names.includes(pkg.base);
-};

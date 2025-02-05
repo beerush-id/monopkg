@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { clear, column, getCtx, Icon, inline, renderCol, Spacer, TreeSign, txt } from '../utils/common.js';
+import { clear, column, getCtx, glob, Icon, inline, renderCol, Spacer, TreeSign, txt } from '../utils/common.js';
 import process from 'node:process';
 import { type DependencyScope, type MetaPointer, type PackageMeta, readMeta, writeMeta } from './meta.js';
 import { join } from 'node:path';
@@ -29,6 +29,14 @@ export type ScriptBlock = {
   name: string;
   package: Package;
   commands: ScriptCommand[];
+};
+
+export type RunOptions = {
+  standalone?: boolean;
+  sequential?: boolean;
+  dependent?: string;
+  strict?: boolean;
+  dry?: boolean;
 };
 
 export const STACK_RESOLVES = new Map<string, boolean>();
@@ -130,7 +138,7 @@ export class Package {
   ) {
     this.link = { library: root.link.library, workspace: root.id };
     this.base = pointer.base;
-    this.path = join(root.path, pointer.base);
+    this.path = join(root.path, pointer.base).replace(/\\/g, '/');
 
     PACKAGES.set(this.id, this);
     RUNNING_SCRIPTS.set(this, new Map());
@@ -303,14 +311,23 @@ export class Package {
     return packages;
   }
 
-  public async run(scripts: string[], sequential?: boolean, dependent?: string, dry?: boolean): Promise<void[] | void> {
-    const dependencies = this.dependencies;
+  public async run(
+    scripts: string[],
+    { standalone, sequential, dependent, dry, strict }: RunOptions
+  ): Promise<void[] | void> {
+    const dependencies = standalone ? [] : this.dependencies;
 
     if (dependencies.length) {
       if (sequential) {
         for (const dep of dependencies) {
           for (const script of scripts) {
-            await dep.run([script], true, this.createStyledId(script), dry);
+            await dep.run([script], {
+              standalone: false,
+              sequential: true,
+              dependent: this.createStyledId(script),
+              strict,
+              dry,
+            });
           }
         }
       } else {
@@ -318,7 +335,13 @@ export class Package {
           dependencies.map((dep) => {
             return Promise.all(
               scripts.map((script) => {
-                return dep.run([script], false, this.createStyledId(script), dry);
+                return dep.run([script], {
+                  standalone: false,
+                  sequential: false,
+                  dependent: this.createStyledId(script),
+                  strict,
+                  dry,
+                });
               })
             );
           })
@@ -331,18 +354,16 @@ export class Package {
         const block = this.script(script);
 
         if (block) {
-          await this.exec(block, dependent, dry);
+          await this.exec(block, dependent, dry, strict);
         }
       }
-
-      return;
     } else {
       await Promise.all(
         scripts.map((script) => {
           const block = this.script(script);
 
           if (block) {
-            return this.exec(block, dependent, dry);
+            return this.exec(block, dependent, dry, strict);
           }
         })
       );
@@ -353,7 +374,7 @@ export class Package {
     return getExecLabel(this, cmd);
   }
 
-  private async exec(block: ScriptBlock, dependent?: string, dry?: boolean) {
+  private async exec(block: ScriptBlock, dependent?: string, dry?: boolean, strict?: boolean) {
     const logId = this.createStyledId(block.name);
     const running = RUNNING_SCRIPTS.get(this)?.get(block.name);
 
@@ -380,7 +401,14 @@ export class Package {
     const debounce = this.library.config?.execDebounce?.(block) ?? RESOLVE_TIMEOUT;
     renderCol([txt(logId).exec(), blue(pm), cyan('run'), green(block.name)]);
 
-    const promise = execScript(pm, ['run', block.name], join(this.library.path, this.path), logId, debounce, dry);
+    const promise = execScript({
+      cmd: pm,
+      args: ['run', block.name],
+      cwd: join(this.library.path, this.path),
+      logId,
+      timeout: strict ? 0 : debounce,
+      dry,
+    });
 
     RUNNING_SCRIPTS.get(this)?.set(block.name, promise);
     await promise;
@@ -389,6 +417,12 @@ export class Package {
       this.set(`scripts.${block.name}`, current, true);
     }
   }
+}
+
+export function matchPkg(pkg: Package, ...filters: string[]) {
+  return filters.some((filter) => {
+    return pkg.name === filter || pkg.base === filter || glob(filter).test(pkg.base) || glob(filter).test(pkg.path);
+  });
 }
 
 export const getMaxExecLabel = (packages: Package[]) => {
@@ -415,14 +449,23 @@ export const getExecLabel = (pkg: Package, cmd: string) => {
   ]);
 };
 
-async function execScript(
-  cmd: string,
-  args: string[],
-  cwd: string,
-  logId: string,
+type ExecOptions = {
+  cmd: string;
+  args: string[];
+  cwd?: string;
+  dry?: boolean;
+  timeout?: number;
+  logId?: string;
+};
+
+async function execScript({
+  cmd,
+  args,
+  cwd = process.cwd(),
+  logId = '',
   timeout = RESOLVE_TIMEOUT,
-  dry?: boolean
-) {
+  dry = false,
+}: ExecOptions) {
   let debounce = 0;
   let resolved = false;
   const startTime = Date.now();
@@ -443,7 +486,7 @@ async function execScript(
       }, timeout) as never;
     };
 
-    if (dry) {
+    if (dry && timeout) {
       resolveQueue();
       return;
     }
@@ -455,7 +498,7 @@ async function execScript(
     });
 
     const print = (data: string) => {
-      if (!resolved) {
+      if (!resolved && timeout) {
         resolveQueue();
       }
 

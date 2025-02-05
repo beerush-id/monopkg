@@ -15,7 +15,7 @@ import {
   txt,
 } from '../utils/common.js';
 import { getPm, type PackageMeta, readMeta, writeMeta } from './meta.js';
-import { LIBRARIES, LIBRARY_PACKAGES, LIBRARY_WORKSPACES, type Package } from './package.js';
+import { LIBRARIES, LIBRARY_PACKAGES, LIBRARY_WORKSPACES, matchPkg, type Package } from './package.js';
 import { Workspace } from './workspace.js';
 import type { LibraryConfigs, ProjectResolve, QueryOptions } from './shared.js';
 import { setupProject } from './setup.js';
@@ -225,7 +225,7 @@ export class Library {
   }
 
   public get(name: string) {
-    return this.workspaces.map((space) => space.get(name)).find((pkg) => pkg);
+    return this.packages.find((pkg) => matchPkg(pkg, name));
   }
 
   public getSpace(name: string): Workspace | void;
@@ -244,7 +244,7 @@ export class Library {
 
   public find(...names: string[]) {
     if (!names.length) return this.packages;
-    return this.workspaces.map((space) => space.find(...names)).flat();
+    return this.packages.filter((pkg) => matchPkg(pkg, ...names));
   }
 
   public findSpace(...names: string[]) {
@@ -353,25 +353,27 @@ export type SelectOptions = QueryOptions & {
   isExcluded?: (pkg: Package) => boolean;
 };
 
+export const ALL_MARK = '*';
+
 export async function selectPackages(library: Library, options: SelectOptions) {
   const { filter: include = [], exclude = [], subTitle } = options;
   let { workspace: root = [] } = options;
 
   if (!root?.length && options.yes) {
-    root.push('all');
+    root.push(ALL_MARK);
   }
 
   if (!include?.length && options.yes) {
-    include.push('all');
+    include.push(ALL_MARK);
   }
 
-  if (root.includes('all')) {
+  if (root.includes(ALL_MARK)) {
     root = library.workspaces.map((space) => space.name);
   }
 
   let filter = [...include];
 
-  if (include?.includes('all')) {
+  if (include?.includes(ALL_MARK)) {
     filter = library.packages
       .filter((pkg) => {
         return !root?.length || root.includes(pkg.workspace.name);
@@ -386,7 +388,7 @@ export async function selectPackages(library: Library, options: SelectOptions) {
       const packages = space.packages
         .filter((pkg) => !options.isExcluded?.(pkg))
         .filter((pkg) => {
-          return !exclude.includes(pkg.base) && !exclude.includes(pkg.name);
+          return !matchPkg(pkg, ...exclude);
         })
         .map((pkg) => {
           return {
@@ -422,7 +424,7 @@ export async function selectPackages(library: Library, options: SelectOptions) {
           grey('workspace:'),
         ]),
         initialValues: [...include],
-        options: [{ value: 'all', label: 'All' }, ...packages],
+        options: [{ value: ALL_MARK, label: 'All' }, ...packages],
         required: false,
       });
 
@@ -430,12 +432,12 @@ export async function selectPackages(library: Library, options: SelectOptions) {
         return caption.cancel(options.cancelMessage);
       }
 
-      if (result.join() === 'all') {
+      if (result.join() === ALL_MARK) {
         filter.push(...packages.map((pkg) => pkg.value));
         continue;
       }
 
-      for (const name of result.filter((name) => name !== 'all')) {
+      for (const name of result.filter((name) => name !== ALL_MARK)) {
         if (!filter.includes(name)) {
           filter.push(name);
         }
@@ -461,9 +463,7 @@ export async function selectPackages(library: Library, options: SelectOptions) {
 
   filter = filter.filter((name) => {
     const pkg = library.get(name);
-    if (!pkg) return false;
-
-    return !options.isExcluded?.(pkg);
+    return pkg && !options.isExcluded?.(pkg);
   });
 
   if (!filter.length) {
@@ -473,5 +473,5 @@ export async function selectPackages(library: Library, options: SelectOptions) {
     return [];
   }
 
-  return library.find(...filter);
+  return library.find(...filter).filter((pkg) => !matchPkg(pkg, ...exclude));
 }

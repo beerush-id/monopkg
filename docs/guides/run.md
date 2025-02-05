@@ -10,19 +10,19 @@ Use the following command to run scripts in all packages:
 ::: code-group
 
 ```bash [Global]
-monopkg run <scripts...>
+monopkg run <scripts...> [options]
 ```
 
 ```bash [Bun]
-bun x monopkg run <scripts...>
+bun x monopkg run <scripts...> [options]
 ```
 
 ```bash [NPM]
-npx monopkg run <scripts...>
+npx monopkg run <scripts...> [options]
 ```
 
 ```bash [Yarn]
-yarn dlx monopkg run <scripts...>
+yarn dlx monopkg run <scripts...> [options]
 ```
 
 :::
@@ -30,21 +30,18 @@ yarn dlx monopkg run <scripts...>
 ## Options
 
 - **`-b`**, `--before-run` **`<scripts...>`** - Execute scripts before the main script.
+- **`-s`**, `--strict` - Wait for the dependencies to be resolved before running the scripts.
 - **`-f`**, `--filter` **`<packages...>`** - Include specific packages.
 - **`-e`**, `--exclude` **`<packages...>`** - Exclude specific packages.
 - **`-w`**, `--workspace` **`<workspaces...>`** - Root workspaces of the packages.
-
-::: info Note
-
-The `before-run` scripts will run on the specified packages before executing the main scripts in each package.
-
-:::
+- **`--sequential`** - Run scripts sequentially.
+- **`--standalone`** - Run scripts in standalone mode without resolving dependencies.
 
 ## Examples
 
 ### Basic Usage
 
-Run `build` script in all packages
+Run `build` script in interactive mode.
 
 ::: code-group
 
@@ -62,54 +59,6 @@ npx monopkg run build
 
 ```bash [Yarn]
 yarn dlx monopkg run build
-```
-
-:::
-
-### Using Before Run Scripts
-
-Run `clean` script before `build` script in all packages
-
-::: code-group
-
-```bash [Global]
-monopkg run build --before-run clean
-```
-
-```bash [Bun]
-bun x monopkg run build --before-run clean
-```
-
-```bash [NPM]
-npx monopkg run build --before-run clean
-```
-
-```bash [Yarn]
-yarn dlx monopkg run build --before-run clean
-```
-
-:::
-
-### Using Targeted Workspaces
-
-Run `dev:esm` and `dev:cjs` scripts in the `apps` and `tools` workspaces.
-
-::: code-group
-
-```bash [Global]
-monopkg run dev:esm dev:cjs -w apps tools
-```
-
-```bash [Bun]
-bun x monopkg run dev:esm dev:cjs -w apps tools
-```
-
-```bash [NPM]
-npx monopkg run dev:esm dev:cjs -w apps tools
-```
-
-```bash [Yarn]
-yarn dlx monopkg run dev:esm dev:cjs -w apps tools
 ```
 
 :::
@@ -134,6 +83,34 @@ npx monopkg run test -f package-a package-b
 
 ```bash [Yarn]
 yarn dlx monopkg run test -f package-a package-b
+```
+
+:::
+
+## Using Before Run Scripts
+
+The `--before-run` option allows you to execute scripts before the main script. If provided, the main script will wait for all the before-run scripts to complete before running. 
+
+### Example
+
+Run `clean` script before `build` script in all packages.
+
+::: code-group
+
+```bash [Global]
+monopkg run build --before-run clean -f *
+```
+
+```bash [Bun]
+bun x monopkg run build --before-run clean -f *
+```
+
+```bash [NPM]
+npx monopkg run build --before-run clean -f *
+```
+
+```bash [Yarn]
+yarn dlx monopkg run build --before-run clean -f *
 ```
 
 :::

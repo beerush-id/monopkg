@@ -580,6 +580,16 @@ export const newLine = (dashed: boolean = true, fill: Spacer = Spacer.DASH) => {
 };
 
 /**
+ * Create a regular expression from a glob pattern.
+ * @param {string} pattern
+ * @returns {RegExp}
+ */
+export function glob(pattern: string): RegExp {
+  const normalized = pattern.replace(/\./g, '\\.').replace(/\*/g, '.*').replace(/\?/g, '.').replace(/\\/g, '/');
+  return new RegExp(`^${normalized}$`);
+}
+
+/**
  * Randomly determine if the character should be angry.
  * @returns {boolean}
  */
