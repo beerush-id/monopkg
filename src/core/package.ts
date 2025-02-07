@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { clear, column, getCtx, glob, Icon, inline, renderCol, Spacer, TreeSign, txt } from '../utils/common.js';
+import { clear, column, getCtx, glob, Icon, inline, Spacer, TreeSign, txt } from '../utils/common.js';
 import process from 'node:process';
 import { type DependencyScope, type MetaPointer, type PackageMeta, readMeta, writeMeta } from './meta.js';
 import { join } from 'node:path';
@@ -7,7 +7,8 @@ import { read, remove, write } from '@beerush/utils';
 import { type Library } from './library.js';
 import { type Workspace } from './workspace.js';
 import { BASE_COLOR, RESOLVE_TIMEOUT, type ScriptCommand } from './shared.js';
-import { blue, cyan, darkGrey, green } from '../utils/color.js';
+import { blue, Color, cyan, darkGrey, green } from '../utils/color.js';
+import { caption } from '../cli/program.js';
 
 export const PACKAGES = new Map<string, Package>();
 export const LIBRARIES = new Map<string, Library>();
@@ -383,7 +384,7 @@ export class Package {
     }
 
     if (dependent) {
-      renderCol([txt(dependent).tree(), txt(' depends on -> ').black().fillBlue(), logId]);
+      column.print([txt(dependent).tree(), txt(' depends on -> ').black().fillBlue(), logId]);
     }
 
     const current = this.get(`scripts.${block.name}`);
@@ -399,7 +400,7 @@ export class Package {
 
     const pm = this.library.pm;
     const debounce = this.library.config?.execDebounce?.(block) ?? RESOLVE_TIMEOUT;
-    renderCol([txt(logId).exec(), blue(pm), cyan('run'), green(block.name)]);
+    column.print([txt(logId).exec(), blue(pm), cyan('run'), green(block.name)]);
 
     const promise = execScript({
       cmd: pm,
@@ -439,9 +440,9 @@ export const getExecLabel = (pkg: Package, cmd: string) => {
       txt(Icon.CHECKED).color(pkg.workspace.color),
       txt(pkg.workspace.name)
         .color(pkg.workspace.color)
-        .left(maxSpace - pkg.base.length, Spacer.DOT),
+        .left(maxSpace - pkg.base.length, `—` as never),
     ]),
-    darkGrey('.'),
+    darkGrey('»'),
     txt(pkg.base).color(pkg.color),
     darkGrey('['),
     green(cmd),
@@ -470,7 +471,7 @@ async function execScript({
   let resolved = false;
   const startTime = Date.now();
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const resolveQueue = () => {
       clearTimeout(debounce);
 
@@ -478,7 +479,7 @@ async function execScript({
         resolved = true;
         resolve('ok');
 
-        renderCol([
+        column.print([
           txt(logId).done(),
           txt(' ✓ Script processed. ').black().fillGreen(),
           green(`(${(Date.now() - startTime).toLocaleString()}ms)`),
@@ -497,7 +498,7 @@ async function execScript({
       shell: true,
     });
 
-    const print = (data: string) => {
+    const print = (data: string, error?: boolean) => {
       if (!resolved && timeout) {
         resolveQueue();
       }
@@ -510,10 +511,11 @@ async function execScript({
       const nextLines = newLines
         .map((line) => {
           if (!line.trim()) return '';
+
           return inline([
-            darkGrey(TreeSign.MIDDLE),
-            darkGrey(Spacer.DASHED.repeat(prefixLength + 2)),
-            inline([' ', line]),
+            txt(TreeSign.MIDDLE).color(error ? Color.RED : Color.DARK_GREY),
+            txt(Spacer.DASHED.repeat(prefixLength + 2)).color(error ? Color.RED : Color.DARK_GREY),
+            inline([' ', error ? txt(clear(line)).red() : line]),
           ]);
         })
         .filter((l) => l)
@@ -527,16 +529,18 @@ async function execScript({
     };
 
     child.stdout.on('data', print);
-    child.stderr.on('data', print);
+    child.stderr.on('data', (data) => print(data, true));
 
     child.on('exit', (code) => {
       clearTimeout(debounce);
 
       if (!resolved) {
-        renderCol([
-          txt(logId).done(),
-          txt(' ✓ Script completed. ').black().fillGreen(),
-          green(`(${(Date.now() - startTime).toLocaleString()}ms)`),
+        column.print([
+          txt(logId)[code ? 'error' : 'done'](),
+          txt(` ✓ Script ${code ? 'failed' : 'completed'}. `)
+            .color(code ? Color.WHITE : Color.BLACK)
+            .fill(code ? Color.RED : Color.GREEN),
+          txt(`(${(Date.now() - startTime).toLocaleString()}ms)`).color(code ? Color.RED : Color.GREEN),
         ]);
 
         resolved = true;
@@ -545,13 +549,13 @@ async function execScript({
       if (code === 0) {
         resolve('ok');
       } else {
-        reject(new Error('Failed to run script.'));
+        caption.error(`Failed to run script: EXIT CODE ${code}`);
       }
     });
 
     child.on('error', (error) => {
       clearTimeout(debounce);
-      reject(error);
+      caption.error(error.message);
     });
   });
 }

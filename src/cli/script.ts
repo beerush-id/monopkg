@@ -34,7 +34,7 @@ const addCmd = new Command()
     ]);
 
     const packages = await selectPackages(library, {
-      ...scriptCmd.opts(),
+      ...addCmd.opts(),
       subTitle: 'add scripts to',
       cancelMessage: 'Script addition cancelled.',
     });
@@ -92,7 +92,7 @@ const inspectCmd = new Command()
     ]);
 
     const packages = await selectPackages(library, {
-      ...scriptCmd.opts(),
+      ...inspectCmd.opts(),
       subTitle: 'inspect scripts in',
       cancelMessage: 'Script inspection cancelled.',
       isExcluded: (pkg) => {
@@ -152,7 +152,7 @@ const remCmd = new Command()
     ]);
 
     const packages = await selectPackages(library, {
-      ...scriptCmd.opts(),
+      ...remCmd.opts(),
       subTitle: 'remove scripts from',
       cancelMessage: 'Script removal cancelled.',
       isExcluded: (pkg) => {

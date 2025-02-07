@@ -38,6 +38,7 @@ yarn dlx monopkg add [options] <dependencies...>
 - **`-f`**, `--filter` **`<packages...>`** - Include specific packages.
 - **`-e`**, `--exclude` **`<packages...>`** - Exclude specific packages.
 - **`-w`**, `--workspace` **`<workspaces...>`** - Root workspaces of the packages.
+- **`-s`**, `--save` - Install as dependencies.
 - **`-d`**, `--dev` - Install as dev dependencies.
 - **`-p`**, `--peer` - Install as peer dependencies.
 - **`-o`**, `--optional` - Install as optional dependencies.

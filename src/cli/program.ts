@@ -42,11 +42,13 @@ export function addSharedOptions(command: Command, multi = true) {
 }
 
 export type SaveOptions = {
+  save: boolean;
   dev: boolean;
   optional: boolean;
   peer: boolean;
 };
 export function addSharedSaveOptions(command: Command, action: string) {
+  command.option('-s, --save', `${action} as ${cyan('dependencies')}.`);
   command.option('-d, --dev', `${action} as ${cyan('devDependencies')}.`);
   command.option('-o, --optional', `${action} as ${cyan('optionalDependencies')}.`);
   command.option('-p, --peer', `${action} as ${cyan('peerDependencies')}.`);

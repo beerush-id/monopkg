@@ -97,6 +97,20 @@ export type TextStyle = {
   strike?: boolean;
 };
 
+export enum TableSymbol {
+  TOP_LEFT = '┌',
+  TOP_RIGHT = '┐',
+  BOTTOM_LEFT = '└',
+  BOTTOM_RIGHT = '┘',
+  HORIZONTAL = '─',
+  VERTICAL = '│',
+  CROSS = '┼',
+  MID_LEFT = '├',
+  MID_RIGHT = '┤',
+  MID_TOP = '┬',
+  MID_BOTTOM = '┴',
+}
+
 export enum TreeSign {
   BEGIN = '┌',
   MIDDLE = '├',

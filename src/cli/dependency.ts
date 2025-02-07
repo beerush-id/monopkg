@@ -82,20 +82,23 @@ export async function runInstaller(
     inline.print(txt(`▣ ${dep}`).green().tree());
   }
 
-  const { dev, peer, optional } = options;
-  let scope = dev
-    ? pmArgs.scopes.devDependencies
-    : peer
-      ? pmArgs.scopes.peerDependencies
-      : optional
-        ? pmArgs.scopes.optionalDependencies
-        : '';
+  const { save, dev, peer, optional } = options;
+  let scope = save
+    ? pmArgs.scopes.dependencies
+    : dev
+      ? pmArgs.scopes.devDependencies
+      : peer
+        ? pmArgs.scopes.peerDependencies
+        : optional
+          ? pmArgs.scopes.optionalDependencies
+          : '';
 
   if (!scope && options.yes) {
     scope = pmArgs.scopes.dependencies;
   }
 
-  if (['add'].includes(action) && !scope && !options.yes) {
+  const shouldPrompt = !save && !dev && !peer && !optional && !options.yes;
+  if (['add'].includes(action) && !scope && shouldPrompt) {
     scope = (await select({
       message: grey('Which dependency scope to use?'),
       options: [

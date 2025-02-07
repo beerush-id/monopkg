@@ -29,6 +29,7 @@ yarn dlx monopkg attach <packages...> [options]
 
 ## Options
 
+- **`-s`**, `--save` - Add packages as Dependencies.
 - **`-d`**, `--dev` - Add packages as devDependencies.
 - **`-p`**, `--peer` - Add packages as peerDependencies.
 - **`-o`**, `--optional` - Add packages as optionalDependencies.
