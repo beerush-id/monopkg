@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import process from 'node:process';
-import { Color, type ColorCode, darkGrey, getColor } from './color.js';
+import { COLOR, type ColorCode, darkGrey, getColor } from './color.js';
 
 export enum Icon {
   BRAND = '▩',
@@ -169,9 +169,9 @@ export class Text {
 
       const columns = [
         this.prefix,
-        stylize(lPref, { color: Color.DARK_GREY }),
+        stylize(lPref, { color: COLOR.GREY_DARK }),
         stylize(line, this.style),
-        stylize(rPref, { color: Color.DARK_GREY }),
+        stylize(rPref, { color: COLOR.GREY_DARK }),
         this.suffix,
       ];
 
@@ -249,49 +249,49 @@ export class Text {
     return this;
   }
 
-  public beginTree(level = 0, color = Color.DARK_GREY, spacer = Spacer.DASH) {
+  public beginTree(level = 0, color = COLOR.GREY_DARK, spacer = Spacer.DASH) {
     return this.tree(level, TreeSign.BEGIN, color, spacer);
   }
 
-  public tree(level = 0, sign = TreeSign.MIDDLE, color = Color.DARK_GREY, spacer = Spacer.DASHED) {
+  public tree(level = 0, sign = TreeSign.MIDDLE, color = COLOR.GREY_DARK, spacer = Spacer.DASHED) {
     this.prefix = stylize((sign + spacer).padEnd(level * INDENT_SPACES + 2, spacer), { color: color }) + ' ';
     return this;
   }
 
-  public lineTree(level = 0, color = Color.DARK_GREY, spacer = Spacer.SPACE) {
+  public lineTree(level = 0, color = COLOR.GREY_DARK, spacer = Spacer.SPACE) {
     return this.tree(level, TreeSign.FILLED, color, spacer);
   }
 
-  public endTree(level = 0, fg = Color.DARK_GREY, spacer = Spacer.DASH) {
+  public endTree(level = 0, fg = COLOR.GREY_DARK, spacer = Spacer.DASH) {
     return this.tree(level, TreeSign.END, fg, spacer);
   }
 
-  public list(level = 0, fg = Color.DARK_GREY, spacer = Spacer.SPACE) {
+  public list(level = 0, fg = COLOR.GREY_DARK, spacer = Spacer.SPACE) {
     this.prefix = stylize(Spacer.BULLET.padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
     return this;
   }
 
-  public bullet(level = 0, fg = Color.DARK_GREY, spacer = Spacer.SPACE) {
+  public bullet(level = 0, fg = COLOR.GREY_DARK, spacer = Spacer.SPACE) {
     this.prefix = stylize((Spacer.BULLET + spacer).padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
     return this;
   }
 
-  public ring(level = 0, fg = Color.GREEN, spacer = Spacer.SPACE) {
+  public ring(level = 0, fg = COLOR.GREEN, spacer = Spacer.SPACE) {
     this.prefix = stylize((Spacer.RING + spacer).padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
     return this;
   }
 
-  public exec(level = 0, fg = Color.GREEN, spacer = Spacer.SPACE) {
+  public exec(level = 0, fg = COLOR.GREEN, spacer = Spacer.SPACE) {
     this.prefix = stylize((Spacer.EXEC + spacer).padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
     return this;
   }
 
-  public done(level = 0, fg = Color.GREEN, spacer = Spacer.SPACE) {
+  public done(level = 0, fg = COLOR.GREEN, spacer = Spacer.SPACE) {
     this.prefix = stylize((Spacer.DONE + spacer).padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
     return this;
   }
 
-  public error(level = 0, fg = Color.RED, spacer = Spacer.SPACE) {
+  public error(level = 0, fg = COLOR.RED, spacer = Spacer.SPACE) {
     this.prefix = stylize((Spacer.ERROR + spacer).padStart(level * INDENT_SPACES, spacer) + ' ', { color: fg });
     return this;
   }
@@ -311,162 +311,162 @@ export class Text {
   }
 
   public black() {
-    this.style.color = Color.BLACK;
+    this.style.color = COLOR.BLACK;
     return this;
   }
 
   public fillBlack() {
-    this.style.fill = Color.BLACK;
+    this.style.fill = COLOR.BLACK;
     return this;
   }
 
   public white() {
-    this.style.color = Color.WHITE;
+    this.style.color = COLOR.WHITE;
     return this;
   }
 
   public fillWhite() {
-    this.style.fill = Color.WHITE;
+    this.style.fill = COLOR.WHITE;
     return this;
   }
 
   public red() {
-    this.style.color = Color.RED;
+    this.style.color = COLOR.RED;
     return this;
   }
 
   public fillRed() {
-    this.style.fill = Color.RED;
+    this.style.fill = COLOR.RED;
     return this;
   }
 
   public green() {
-    this.style.color = Color.GREEN;
+    this.style.color = COLOR.GREEN;
     return this;
   }
 
   public fillGreen() {
-    this.style.fill = Color.GREEN;
+    this.style.fill = COLOR.GREEN;
     return this;
   }
 
   public blue() {
-    this.style.color = Color.BLUE;
+    this.style.color = COLOR.BLUE;
     return this;
   }
 
   public fillBlue() {
-    this.style.fill = Color.BLUE;
+    this.style.fill = COLOR.BLUE;
     return this;
   }
 
   public grey() {
-    this.style.color = Color.GREY;
+    this.style.color = COLOR.GREY;
     return this;
   }
 
   public fillGrey() {
-    this.style.fill = Color.GREY;
+    this.style.fill = COLOR.GREY;
     return this;
   }
 
   public yellow() {
-    this.style.color = Color.YELLOW;
+    this.style.color = COLOR.YELLOW;
     return this;
   }
 
   public fillYellow() {
-    this.style.fill = Color.YELLOW;
+    this.style.fill = COLOR.YELLOW;
     return this;
   }
 
   public darkGrey() {
-    this.style.color = Color.DARK_GREY;
+    this.style.color = COLOR.GREY_DARK;
     return this;
   }
 
   public fillDarkGrey() {
-    this.style.fill = Color.DARK_GREY;
+    this.style.fill = COLOR.GREY_DARK;
     return this;
   }
 
   public darkGreen() {
-    this.style.color = Color.DARK_GREEN;
+    this.style.color = COLOR.GREEN_DARK;
     return this;
   }
 
   public fillDarkGreen() {
-    this.style.fill = Color.DARK_GREEN;
+    this.style.fill = COLOR.GREEN_DARK;
     return this;
   }
 
   public darkYellow() {
-    this.style.color = Color.DARK_YELLOW;
+    this.style.color = COLOR.YELLOW_DARK;
     return this;
   }
 
   public fillDarkYellow() {
-    this.style.fill = Color.DARK_YELLOW;
+    this.style.fill = COLOR.YELLOW_DARK;
     return this;
   }
 
   public lightGrey() {
-    this.style.color = Color.LIGHT_GREY;
+    this.style.color = COLOR.GREY_LIGHT;
     return this;
   }
 
   public fillLightGrey() {
-    this.style.fill = Color.LIGHT_GREY;
+    this.style.fill = COLOR.GREY_LIGHT;
     return this;
   }
 
   public cyan() {
-    this.style.color = Color.CYAN;
+    this.style.color = COLOR.CYAN;
     return this;
   }
 
   public fillCyan() {
-    this.style.fill = Color.CYAN;
+    this.style.fill = COLOR.CYAN;
     return this;
   }
 
   public pink() {
-    this.style.color = Color.PINK;
+    this.style.color = COLOR.PINK;
     return this;
   }
 
   public fillPink() {
-    this.style.fill = Color.PINK;
+    this.style.fill = COLOR.PINK;
     return this;
   }
 
   public purple() {
-    this.style.color = Color.PURPLE;
+    this.style.color = COLOR.PURPLE;
     return this;
   }
 
   public fillPurple() {
-    this.style.fill = Color.PURPLE;
+    this.style.fill = COLOR.PURPLE;
     return this;
   }
 
   public orange() {
-    this.style.color = Color.ORANGE;
+    this.style.color = COLOR.ORANGE;
     return this;
   }
 
   public fillOrange() {
-    this.style.fill = Color.ORANGE;
+    this.style.fill = COLOR.ORANGE;
     return this;
   }
 
   public skyBlue() {
-    this.style.color = Color.SKY_BLUE;
+    this.style.color = COLOR.SKY_BLUE;
     return this;
   }
 
   public fillSkyBlue() {
-    this.style.fill = Color.SKY_BLUE;
+    this.style.fill = COLOR.SKY_BLUE;
     return this;
   }
 
@@ -599,7 +599,7 @@ export const newLine = (dashed: boolean = true, fill: Spacer = Spacer.DASH) => {
  * @returns {RegExp}
  */
 export function glob(pattern: string): RegExp {
-  const normalized = pattern.replace(/\./g, '\\.').replace(/\*/g, '.*').replace(/\?/g, '.').replace(/\\/g, '/');
+  const normalized = pattern.replace(/\\/g, '/').replace(/\./g, '\\.').replace(/\*/g, '.*').replace(/\?/g, '.');
   return new RegExp(`^${normalized}$`);
 }
 

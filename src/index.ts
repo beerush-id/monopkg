@@ -16,6 +16,8 @@ import { initCmd } from './cli/init.js';
 import { render, shouldTired } from './utils/common.js';
 import { yellow } from './utils/color.js';
 import { sleep } from '@beerush/utils';
+import { copyCmd } from './cli/copy.js';
+import { xCmd } from './cli/exec.js';
 
 declare global {
   interface String {
@@ -39,6 +41,7 @@ program
 program
   .addCommand(addCmd)
   .addCommand(attachCmd)
+  .addCommand(copyCmd)
   .addCommand(createCmd)
   .addCommand(detachCmd)
   .addCommand(infoCmd)
@@ -51,7 +54,8 @@ program
   .addCommand(scriptCmd)
   .addCommand(unlinkCmd)
   .addCommand(versionCmd)
-  .addCommand(workspaceCmd);
+  .addCommand(workspaceCmd)
+  .addCommand(xCmd);
 
 export async function main() {
   if (shouldTired()) {

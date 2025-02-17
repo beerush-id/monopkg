@@ -7,7 +7,7 @@ import { read, remove, write } from '@beerush/utils';
 import { type Library } from './library.js';
 import { type Workspace } from './workspace.js';
 import { BASE_COLOR, RESOLVE_TIMEOUT, type ScriptCommand } from './shared.js';
-import { blue, Color, cyan, darkGrey, green } from '../utils/color.js';
+import { blue, COLOR, cyan, darkGrey, green } from '../utils/color.js';
 import { caption } from '../cli/program.js';
 
 export const PACKAGES = new Map<string, Package>();
@@ -251,15 +251,12 @@ export class Package {
   public hasDependency(...packages: string[]) {
     return packages.some((name) => {
       const pkg = this.library.get(name);
-
-      if (pkg) {
-        return (
-          this.meta.dependencies?.[pkg.name] ||
-          this.meta.devDependencies?.[pkg.name] ||
-          this.meta.peerDependencies?.[pkg.name] ||
-          this.meta.optionalDependencies?.[pkg.name]
-        );
-      }
+      return (
+        this.meta.dependencies?.[pkg?.name ?? name] ||
+        this.meta.devDependencies?.[pkg?.name ?? name] ||
+        this.meta.peerDependencies?.[pkg?.name ?? name] ||
+        this.meta.optionalDependencies?.[pkg?.name ?? name]
+      );
     });
   }
 
@@ -283,8 +280,8 @@ export class Package {
     this.write();
   }
 
-  public write() {
-    if (this.changes?.length) {
+  public write(force?: boolean) {
+    if (this.changes?.length || force) {
       writeMeta(this.path, this.meta, this.library.path);
       this.changes = [];
     }
@@ -409,6 +406,7 @@ export class Package {
       logId,
       timeout: strict ? 0 : debounce,
       dry,
+      strict,
     });
 
     RUNNING_SCRIPTS.get(this)?.set(block.name, promise);
@@ -457,15 +455,17 @@ type ExecOptions = {
   dry?: boolean;
   timeout?: number;
   logId?: string;
+  strict?: boolean;
 };
 
-async function execScript({
+export async function execScript({
   cmd,
   args,
   cwd = process.cwd(),
   logId = '',
   timeout = RESOLVE_TIMEOUT,
   dry = false,
+  strict,
 }: ExecOptions) {
   let debounce = 0;
   let resolved = false;
@@ -513,8 +513,8 @@ async function execScript({
           if (!line.trim()) return '';
 
           return inline([
-            txt(TreeSign.MIDDLE).color(error ? Color.RED : Color.DARK_GREY),
-            txt(Spacer.DASHED.repeat(prefixLength + 2)).color(error ? Color.RED : Color.DARK_GREY),
+            txt(TreeSign.MIDDLE).color(error ? COLOR.RED : COLOR.GREY_DARK),
+            txt(Spacer.DASHED.repeat(prefixLength + 2)).color(error ? COLOR.RED : COLOR.GREY_DARK),
             inline([' ', error ? txt(clear(line)).red() : line]),
           ]);
         })
@@ -538,9 +538,9 @@ async function execScript({
         column.print([
           txt(logId)[code ? 'error' : 'done'](),
           txt(` ✓ Script ${code ? 'failed' : 'completed'}. `)
-            .color(code ? Color.WHITE : Color.BLACK)
-            .fill(code ? Color.RED : Color.GREEN),
-          txt(`(${(Date.now() - startTime).toLocaleString()}ms)`).color(code ? Color.RED : Color.GREEN),
+            .color(code ? COLOR.WHITE : COLOR.BLACK)
+            .fill(code ? COLOR.RED : COLOR.GREEN),
+          txt(`(${(Date.now() - startTime).toLocaleString()}ms)`).color(code ? COLOR.RED : COLOR.GREEN),
         ]);
 
         resolved = true;
@@ -549,7 +549,10 @@ async function execScript({
       if (code === 0) {
         resolve('ok');
       } else {
-        caption.error(`Failed to run script: EXIT CODE ${code}`);
+        if (strict) {
+          caption.error(`Script executions exited: EXIT CODE ${code}`);
+          process.exit(code ?? 1);
+        }
       }
     });
 

@@ -3,7 +3,7 @@ import { basename } from 'node:path';
 import { library } from './index.js';
 import { getExeCommand } from './pm.js';
 import { column, txt } from '../utils/common.js';
-import { Color, cyan, green, purple } from '../utils/color.js';
+import { COLOR, cyan, green, purple } from '../utils/color.js';
 import { caption } from '../cli/program.js';
 
 export enum PromptType {
@@ -34,7 +34,7 @@ export type ConfirmPrompt = BasePrompt & {
 export type SelectOption = {
   value: string;
   label: string;
-  color?: Color;
+  color?: number;
 };
 export type SelectPrompt = BasePrompt & {
   type: PromptType.SELECT;
@@ -79,8 +79,8 @@ const createViteTemplate = ({ name, label }: { name: string; label: string }) =>
         message: 'What language would you like to use?',
         default: `${name}-ts`,
         options: [
-          { value: `${name}-ts`, label: 'Typescript', color: Color.BLUE },
-          { value: name, label: 'Javascript', color: Color.YELLOW },
+          { value: `${name}-ts`, label: 'Typescript', color: COLOR.BLUE },
+          { value: name, label: 'Javascript', color: COLOR.YELLOW },
         ],
       },
     ],
@@ -105,8 +105,8 @@ const createSvelteTemplate = ({ name, label, template }: { name: string; label: 
         message: 'What language would you like to use?',
         default: 'ts',
         options: [
-          { value: 'ts', label: 'Typescript', color: Color.BLUE },
-          { value: 'jsdoc', label: 'Javascript', color: Color.YELLOW },
+          { value: 'ts', label: 'Typescript', color: COLOR.BLUE },
+          { value: 'jsdoc', label: 'Javascript', color: COLOR.YELLOW },
         ],
       },
       {
@@ -204,10 +204,10 @@ export const APP_TEMPLATES: PackageTemplate[] = [
         message: 'Which stylesheet format would you like to use?',
         default: 'scss',
         options: [
-          { value: 'css', label: 'CSS', color: Color.BLUE },
-          { value: 'scss', label: 'SCSS', color: Color.PINK },
-          { value: 'sass', label: 'SASS', color: Color.PINK },
-          { value: 'less', label: 'LESS', color: Color.DARK_BLUE },
+          { value: 'css', label: 'CSS', color: COLOR.BLUE },
+          { value: 'scss', label: 'SCSS', color: COLOR.PINK },
+          { value: 'sass', label: 'SASS', color: COLOR.PINK },
+          { value: 'less', label: 'LESS', color: COLOR.BLUE_DARK },
         ],
       },
       {
@@ -245,8 +245,8 @@ export const APP_TEMPLATES: PackageTemplate[] = [
         default: '--ts',
         valueOnly: true,
         options: [
-          { value: '--ts', label: 'Typescript', color: Color.BLUE },
-          { value: '--js', label: 'Javascript', color: Color.YELLOW },
+          { value: '--ts', label: 'Typescript', color: COLOR.BLUE },
+          { value: '--js', label: 'Javascript', color: COLOR.YELLOW },
         ],
       },
       {

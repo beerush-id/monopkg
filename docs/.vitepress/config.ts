@@ -72,6 +72,15 @@ export default defineConfig({
             ],
           },
           {
+            text: 'Utilities',
+            collapsed: true,
+            items: [
+              { text: 'Copy Files', link: '/guides/copy' },
+              { text: 'Exports Generator', link: '/guides/exports' },
+              { text: 'Execute Command', link: '/guides/exec' },
+            ],
+          },
+          {
             text: 'Workspaces',
             collapsed: true,
             items: [

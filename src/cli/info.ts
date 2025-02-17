@@ -5,6 +5,8 @@ import { Package } from '../core/package.js';
 import { library, selectPackages } from '../core/index.js';
 import type { QueryOptions } from '../core/shared.js';
 import { darkGrey, grey } from '../utils/color.js';
+import { confirm, isCancel, multiselect } from '@clack/prompts';
+import { listDirs } from '../core/meta.js';
 
 export const infoCmd = new Command()
   .configureHelp(configs)
@@ -154,6 +156,211 @@ const delInfoCmd = new Command()
 addSharedOptions(delInfoCmd);
 infoCmd.addCommand(delInfoCmd);
 
+type ExportOptions = {
+  module: string[];
+  source: string;
+  output: string;
+  wildcard: boolean;
+};
+
+const exportCmd = new Command()
+  .configureHelp(configs)
+  .command('exports [paths...]')
+  .usage('[paths...]')
+  .description('Generate exports information in package.json.')
+  .option('-m, --module [modules...]', 'Exported modules (esm, cjs, dts).')
+  .option('-s, --source [path]', 'Source directory.', 'src')
+  .option('-o, --output [path]', 'Output directory.', 'dist')
+  .option('--wildcard', 'Add wildcard exports.')
+  .action(async (paths: string[] = []) => {
+    const infoOptions = infoCmd.opts<FilterOptions>();
+    const options = exportCmd.opts<ExportOptions>();
+
+    caption.welcome('exports generator!', infoOptions.dry);
+
+    const packages = await selectPackages(library, {
+      ...infoOptions,
+      subTitle: 'generate exports for',
+      cancelMessage: 'Exports generation cancelled!',
+    });
+
+    if (!packages) {
+      return;
+    }
+
+    if (!options.module?.length) {
+      const result = await multiselect({
+        message: 'Which modules to export?',
+        required: false,
+        options: ['dts', 'svelte', 'esm', 'cjs'].map((mod) => ({ value: mod, title: mod })),
+      });
+
+      if (isCancel(result)) {
+        return caption.cancel('Exports generation cancelled!');
+      }
+
+      options.module = result;
+    }
+
+    if (typeof options.wildcard === 'undefined') {
+      const result = await confirm({
+        message: 'Add wildcard exports?',
+        initialValue: false,
+      });
+
+      if (isCancel(result)) {
+        return caption.cancel('Exports generation cancelled!');
+      }
+
+      options.wildcard = result;
+    }
+
+    for (const pkg of packages) {
+      let exportPaths = [...paths];
+
+      if (exportPaths.includes('*')) {
+        exportPaths = listDirs(options.source, pkg.pointer.path);
+      }
+
+      if (pkg.hasDependency('typescript')) {
+        options.module.push('dts');
+      }
+
+      if (!exportPaths.length) {
+        const dirs = listDirs(options.source, pkg.pointer.path);
+        const result = await multiselect({
+          message: column([grey('Which directories to export from'), txt(pkg.base).color(pkg.color), grey('package?')]),
+          required: false,
+          options: dirs.map((dir) => ({ value: dir, title: dir })),
+        });
+
+        if (isCancel(result)) {
+          continue;
+        }
+
+        exportPaths = result;
+      }
+
+      await runTask([
+        {
+          title: inline([grey('Generating exports for '), txt(pkg.base).color(pkg.color), grey(':')]),
+          task: async () => {
+            const outRef = options.output.replace(/^[./]+/, '');
+            const outDir = `./${outRef}`;
+            const useSvt = options.module.includes('svelte');
+            const useEsm = pkg.type === 'module' || options.module.includes('esm') || useSvt;
+            const useCjs = pkg.type !== 'module' || options.module.includes('cjs');
+            const useDts = options.module.includes('dts');
+            const cjsIndex = `index.${useEsm ? 'cjs' : 'js'}`;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const maps: any = {};
+
+            if (!Array.isArray(pkg.meta.files)) {
+              pkg.meta.files = [];
+            }
+
+            if (!pkg.meta.files.includes(outRef)) {
+              pkg.meta.files.push(outRef);
+            }
+
+            if (!pkg.meta.directories) {
+              pkg.meta.directories = {};
+            }
+
+            pkg.meta.directories[outRef] = outDir;
+
+            if (useDts) {
+              pkg.meta.types = `${outDir}/index.d.ts`;
+            } else {
+              delete pkg.meta.types;
+            }
+
+            if (useSvt) {
+              pkg.meta.svelte = `${outDir}/index.js`;
+            } else {
+              delete pkg.meta.svelte;
+            }
+
+            if (useCjs) {
+              pkg.meta.main = `${outDir}/${cjsIndex}`;
+            } else {
+              delete pkg.meta.main;
+            }
+
+            if (useEsm) {
+              pkg.meta.module = `${outDir}/index.js`;
+            } else {
+              delete pkg.meta.module;
+            }
+
+            maps['.'] = {};
+
+            if (useDts) {
+              maps['.'].types = `${outDir}/index.d.ts`;
+            }
+
+            if (useSvt) {
+              maps['.'].svelte = `${outDir}/index.js`;
+            }
+
+            if (useEsm) {
+              maps['.'].import = `${outDir}/index.js`;
+            }
+
+            if (useCjs) {
+              maps['.'].require = `${outDir}/${cjsIndex}`;
+            }
+
+            for (const path of exportPaths) {
+              const base = `${outDir}/${path}`;
+              const key = `./${path}`;
+
+              maps[key] = {};
+
+              if (useDts) {
+                maps[key].types = `${base}/index.d.ts`;
+              }
+
+              if (useSvt) {
+                maps[key].svelte = `${base}/index.js`;
+              }
+
+              if (useEsm) {
+                maps[key].import = `${base}/index.js`;
+              }
+
+              if (useCjs) {
+                maps[key].require = `${base}/${cjsIndex}`;
+              }
+
+              if (options.wildcard) {
+                maps[key + '/*'] = `${base}/*`;
+              }
+            }
+
+            pkg.meta.exports = maps;
+
+            printPkgInfo(pkg, ['main', 'module', 'types', 'svelte', 'exports', 'files', 'directories'], 0, false, true);
+            inline.print(txt('').lineTree());
+
+            if (!infoOptions.dry) {
+              column.print([txt('Writing exports for').grey().tree(), txt(pkg.base).color(pkg.color)]);
+              pkg.write(true);
+            }
+
+            return column([grey('Exports for'), txt(pkg.base).color(pkg.color), grey('generated!')]);
+          },
+        },
+      ]);
+    }
+
+    caption.success('Exports generated!');
+  });
+
+addSharedOptions(exportCmd);
+infoCmd.addCommand(exportCmd);
+
 export const printInfos = (keys: string[], options: QueryOptions) => {
   const workspaces = library.query({ ...options });
 
@@ -187,20 +394,22 @@ export const printInfos = (keys: string[], options: QueryOptions) => {
   caption.success('Information reading done!');
 };
 
-export const printPkgInfo = (pkg: Package, keys: string[], indent = 0, isEnd = false) => {
+export const printPkgInfo = (pkg: Package, keys: string[], indent = 0, isEnd = false, simple?: boolean) => {
   const longestKey = keys.reduce((acc: number, key: string) => (key.length > acc ? key.length : acc), 0);
 
-  inline.print([
-    txt(pkg.base)
-      .color(pkg.color)
-      .tree(indent + 1),
-    darkGrey(':'),
-  ]);
+  if (!simple) {
+    inline.print([
+      txt(pkg.base)
+        .color(pkg.color)
+        .tree(indent + 1),
+      darkGrey(':'),
+    ]);
+  }
 
   for (const key of keys) {
     const isLast = keys.indexOf(key) === keys.length - 1;
     setCtx('longest-key', longestKey);
-    printValue(key, pkg.get(key), indent + 2, isEnd && isLast);
+    printValue(key, pkg.get(key), indent + (simple ? 0 : 2), isEnd && isLast);
   }
 };
 
@@ -214,7 +423,7 @@ export const printValue = (label: string, value: unknown, indent = 0, isEnd = fa
 
     for (let i = 0; i < value.length; i++) {
       const isLast = i === value.length - 1;
-      printValue(align(`${i}`), value[i], indent, isEnd && isLast);
+      printValue(align(`${i}`), value[i], indent + 1, isEnd && isLast);
     }
   } else if (typeof value === 'object') {
     inline.print([txt(label).grey().tree(indent).align(max), txt(':').darkGrey()]);

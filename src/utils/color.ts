@@ -1,30 +1,31 @@
 import { column, inline } from './common.js';
 
-export enum Color {
-  BLACK = 16,
-  BLUE = 12,
-  DARK_BLUE = 4,
-  DARK_GREEN = 66,
-  DARK_GREY = 241,
-  DARK_YELLOW = 94,
-  CYAN = 14,
-  GREY = 248,
-  GREEN = 10,
-  LIGHT_BLUE = 32,
-  LIGHT_GREEN = 42,
-  LIGHT_GREY = 253,
-  ORANGE = 214,
-  PINK = 211,
-  PURPLE = 13,
-  RED = 9,
-  SKY_BLUE = 87,
-  WHITE = 255,
-  YELLOW = 11,
-}
+export const COLOR = {
+  BLACK: 16,
+  BLUE: 12,
+  BLUE_DARK: 18,
+  BLUE_LIGHT: 33,
+  CYAN: 14,
+  GREY: 145,
+  GREY_DARK: 8,
+  GREY_LIGHT: 253,
+  GREEN: 10,
+  GREEN_DARK: 66,
+  GREEN_LIGHT: 42,
+  ORANGE: 214,
+  PINK: 205,
+  PURPLE: 91,
+  RED: 9,
+  SKY_BLUE: 39,
+  WHITE: 15,
+  YELLOW: 11,
+  YELLOW_DARK: 220,
+  YELLOW_LIGHT: 228,
+};
 
-export type ColorCode = keyof typeof Color;
+export type ColorCode = keyof typeof COLOR;
 export const getColor = (code: ColorCode | number) => {
-  return typeof code === 'string' ? Color[code] : code;
+  return typeof code === 'string' ? COLOR[code] : code;
 };
 
 export const colorize = (text: string, color: ColorCode | number) => {
@@ -37,16 +38,16 @@ export const fill = (text: string, color: ColorCode | number) => {
 
 export const black = (text: string) => colorize(text, 'BLACK');
 export const blue = (text: string) => colorize(text, 'BLUE');
-export const darkBlue = (text: string) => colorize(text, 'DARK_BLUE');
-export const darkGreen = (text: string) => colorize(text, 'DARK_GREEN');
-export const darkGrey = (text: string) => colorize(text, 'DARK_GREY');
-export const darkYellow = (text: string) => colorize(text, 'DARK_YELLOW');
+export const darkBlue = (text: string) => colorize(text, 'BLUE_DARK');
+export const darkGreen = (text: string) => colorize(text, 'GREEN_DARK');
+export const darkGrey = (text: string) => colorize(text, 'GREY_DARK');
+export const darkYellow = (text: string) => colorize(text, 'YELLOW_DARK');
 export const cyan = (text: string) => colorize(text, 'CYAN');
 export const grey = (text: string) => colorize(text, 'GREY');
 export const green = (text: string) => colorize(text, 'GREEN');
-export const lightBlue = (text: string) => colorize(text, 'LIGHT_BLUE');
-export const lightGreen = (text: string) => colorize(text, 'LIGHT_GREEN');
-export const lightGrey = (text: string) => colorize(text, 'LIGHT_GREY');
+export const lightBlue = (text: string) => colorize(text, 'BLUE_LIGHT');
+export const lightGreen = (text: string) => colorize(text, 'GREEN_LIGHT');
+export const lightGrey = (text: string) => colorize(text, 'GREY_LIGHT');
 export const orange = (text: string) => colorize(text, 'ORANGE');
 export const pink = (text: string) => colorize(text, 'PINK');
 export const purple = (text: string) => colorize(text, 'PURPLE');

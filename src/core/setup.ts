@@ -1,5 +1,5 @@
 import { confirm, isCancel, multiselect, select, tasks, text } from '@clack/prompts';
-import { blue, Color, cyan, darkGrey, green, grey, pink, red, yellow } from '../utils/color.js';
+import { blue, COLOR, cyan, darkGrey, green, grey, pink, red, yellow } from '../utils/color.js';
 import { column, Icon, icon, inline, section, txt } from '../utils/common.js';
 import { PACKAGE_MANAGERS } from './pm.js';
 import { basename, join } from 'node:path';
@@ -17,7 +17,7 @@ type SpaceTemplate = {
   label: string;
   hint: string;
   default: string;
-  color: Color;
+  color: number;
   templates: PackageTemplate[];
 };
 const SPACE_TEMPLATES: Array<SpaceTemplate> = [
@@ -26,7 +26,7 @@ const SPACE_TEMPLATES: Array<SpaceTemplate> = [
     label: 'Apps',
     default: 'svelte-minimal',
     hint: 'Apps are where your client-side applications live.',
-    color: Color.CYAN,
+    color: COLOR.CYAN,
     templates: APP_TEMPLATES.filter((t) => t.category === 'framework'),
   },
   {
@@ -34,14 +34,14 @@ const SPACE_TEMPLATES: Array<SpaceTemplate> = [
     label: 'Packages',
     default: 'vanilla',
     hint: 'Packages are where your shared libraries live.',
-    color: Color.BLUE,
+    color: COLOR.BLUE,
     templates: APP_TEMPLATES.filter((t) => t.category !== 'backend'),
   },
   {
     name: 'services',
     label: 'Services',
     default: 'elysia',
-    color: Color.YELLOW,
+    color: COLOR.YELLOW,
     hint: 'Services are where your API endpoints live.',
     templates: APP_TEMPLATES.filter((t) => t.category === 'backend'),
   },
@@ -244,7 +244,7 @@ export async function setupProject({
         space = {
           name: s,
           label: s,
-          color: Color.CYAN,
+          color: COLOR.CYAN,
         } as SpaceTemplate;
       }
 

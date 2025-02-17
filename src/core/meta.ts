@@ -85,6 +85,22 @@ export function writeMeta(path: string, meta: PackageMeta, cwd?: string) {
   }
 }
 
+export function listDirs(path: string, cwd?: string): string[] {
+  if (!path.startsWith(rootDir)) {
+    path = join(cwd ?? process.cwd(), path);
+  }
+
+  try {
+    return readdirSync(path).filter((dir) => statSync(join(path, dir)).isDirectory());
+  } catch (error) {
+    if (error instanceof Error) {
+      // console.error('Error reading directory:', error);
+    }
+  }
+
+  return [];
+}
+
 /**
  * List package pointers
  * @param {string} path
