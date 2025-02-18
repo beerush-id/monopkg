@@ -18,6 +18,7 @@ import { yellow } from './utils/color.js';
 import { sleep } from '@beerush/utils';
 import { copyCmd } from './cli/copy.js';
 import { xCmd } from './cli/exec.js';
+import { readFileSync } from 'node:fs';
 
 declare global {
   interface String {
@@ -29,14 +30,17 @@ String.prototype.print = function () {
   console.log(this);
 };
 
+const rawMeta = readFileSync(new URL('../package.json', import.meta.url), 'utf-8');
+const meta = JSON.parse(rawMeta);
+
 program
   .configureHelp(configs)
-  .name('monopkg')
-  .description('A simple, yet useful package manager for monorepos.')
+  .name(meta.name)
+  .description(meta.description)
   .usage('<command> [options]')
   .helpOption('-h, --help', 'Show usage information.')
   .helpCommand('help [command]', 'Display help for a specific command.')
-  .version(`0.0.1`, '-v, --version', 'Output the current version.');
+  .version(meta.version, '-v, --version', 'Output the current version.');
 
 program
   .addCommand(addCmd)

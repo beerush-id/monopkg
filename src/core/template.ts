@@ -1,10 +1,12 @@
 import { confirm, isCancel, select, text } from '@clack/prompts';
-import { basename } from 'node:path';
+import { basename, join } from 'node:path';
 import { library } from './index.js';
 import { getExeCommand } from './pm.js';
 import { column, txt } from '../utils/common.js';
 import { COLOR, cyan, green, purple } from '../utils/color.js';
 import { caption } from '../cli/program.js';
+import type { PackageMeta } from './meta.js';
+import { copyDir } from '../utils/shell.js';
 
 export enum PromptType {
   TEXT = 'text',
@@ -53,12 +55,22 @@ export type TemplateSetup = {
   pmPrefix?: string;
 };
 
+export type AppSetup = {
+  name: string;
+  path: string;
+  command: string;
+  args: string[];
+  cwd: string;
+};
+
 export type PromptList = Array<BasePrompt | TextPrompt | ConfirmPrompt | SelectPrompt>;
 
 export type PackageTemplate = {
   name: string;
   label: string;
   setup: TemplateSetup;
+  description?: string;
+  setupFn?: (options: AppSetup) => Promise<PackageMeta | void> | PackageMeta | void;
   options?: PromptList;
   category?: string;
 };
@@ -295,6 +307,26 @@ export const APP_TEMPLATES: PackageTemplate[] = [
   },
   createSvelteTemplate({ name: 'svelte-minimal', label: 'SvelteKit', template: 'minimal' }),
   createSvelteTemplate({ name: 'svelte-library', label: 'SvelteKit Library', template: 'library' }),
+  {
+    name: 'drizia',
+    label: 'Drizia',
+    description: 'A simple starter package with ElysiaJS, Drizzle, Supabase, and TSUP.',
+    setup: {
+      args: ['drizia'],
+      exec: false,
+      pathForward: true,
+    },
+    category: 'backend',
+    setupFn: async ({ path, cwd }) => {
+      const outDir = join(cwd, path);
+      try {
+        copyDir(new URL('../templates/drizia', import.meta.url), outDir);
+        return { name: basename(path), type: 'module' } as PackageMeta;
+      } catch (error) {
+        console.error(error);
+      }
+    },
+  },
 ];
 
 export const TEMPLATE_CATEGORIES = [
@@ -377,9 +409,10 @@ export async function setupPackage({ template, category, name, path }: CreateApp
   }
 
   if (!name) {
+    const scope = library.meta.name.replace(/^@/, '');
     name = (await text({
       message: 'What is the name of your package?',
-      initialValue: basename(path),
+      initialValue: `@${scope}/${basename(path)}`,
       validate: validate.name,
     })) as string;
 
@@ -406,10 +439,13 @@ export async function setupPackage({ template, category, name, path }: CreateApp
     const templates = TEMPLATE_CATEGORIES.find((item) => item.name === category)?.templates as PackageTemplate[];
     template = (await select({
       message: 'What template would you like to use?',
-      options: (templates ?? []).map((template) => ({
-        value: template.name,
-        label: template.label,
-      })),
+      options: (templates ?? [])
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((template) => ({
+          value: template.name,
+          label: template.label,
+          hint: template.description,
+        })),
     })) as string;
 
     if (isCancel(template)) {
@@ -537,5 +573,5 @@ export async function setupPackage({ template, category, name, path }: CreateApp
     flags.push(`${setup.pmPrefix}${library.pm}`);
   }
 
-  return { name, path, command, args: [...args, ...flags] };
+  return { name, path, command, args: [...args, ...flags], action: config.setupFn };
 }

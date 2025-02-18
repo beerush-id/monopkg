@@ -106,18 +106,18 @@ export const createCmd = new Command()
     }
 
     const { name = '', outPath: path, cwdPath: cwd } = createCmd.opts();
-    const result = await setupPackage({
+    const setup = await setupPackage({
       template,
       name,
       path: cwd ?? path,
     });
 
-    if (!result) {
+    if (!setup) {
       return;
     }
 
-    const outPath = result.path;
-    const outName = result.name;
+    const outPath = setup.path;
+    const outName = setup.name;
     const version = '0.0.1';
     const workDir = cwd ? join(library.path, space.path, outPath) : join(library.path, space.path);
 
@@ -157,7 +157,7 @@ export const createCmd = new Command()
 
     newLine();
     inline.print(
-      [result.command, ...result.args].map((arg, i) => {
+      [setup.command, ...setup.args].map((arg, i) => {
         if (arg.startsWith('--')) {
           return grey(arg);
         }
@@ -172,7 +172,15 @@ export const createCmd = new Command()
     }
 
     try {
-      await shell(result.command, result.args, { cwd: workDir });
+      if (typeof setup.action === 'function') {
+        const result = await setup.action({ ...setup, cwd: workDir });
+
+        if (!result) {
+          return inline.print([red('Cancelled.')]);
+        }
+      } else {
+        await shell(setup.command, setup.args, { cwd: workDir });
+      }
     } catch (err) {
       if (err instanceof Error) {
         inline.print([red('Cancelled.')]);
