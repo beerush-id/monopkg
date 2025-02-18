@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "monopkg",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A simple, yet beautiful monorepo package manager.",
   "module": "dist/index.js",
   "exports": {
