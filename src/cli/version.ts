@@ -13,7 +13,7 @@ export const versionCmd = new Command()
   .description('Bump or set package version (default: patch)')
   .action(async (version: string) => {
     const { dry } = versionCmd.opts();
-    caption.welcome('version wizard!');
+    caption.welcome('version wizard!', dry);
 
     section.print([txt('').lineTree(), txt('Updating package versions.').grey().bullet()]);
 

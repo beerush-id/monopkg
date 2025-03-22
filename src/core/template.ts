@@ -327,6 +327,26 @@ export const APP_TEMPLATES: PackageTemplate[] = [
       }
     },
   },
+  {
+    name: 'tsup',
+    label: 'tsup Project',
+    description: 'A simple project with tsup and Typescript.',
+    setup: {
+      args: ['tsup'],
+      exec: false,
+      pathForward: false,
+    },
+    category: 'starter',
+    setupFn: async ({ path, cwd }) => {
+      const outDir = join(cwd, path);
+      try {
+        copyDir(new URL('../templates/tsup', import.meta.url), outDir);
+        return { name: basename(path), type: 'module' } as PackageMeta;
+      } catch (error) {
+        console.error(error);
+      }
+    },
+  },
 ];
 
 export const TEMPLATE_CATEGORIES = [
@@ -344,6 +364,11 @@ export const TEMPLATE_CATEGORIES = [
     name: 'framework',
     label: 'Frontend Framework',
     templates: APP_TEMPLATES.filter((template) => template.category === 'framework'),
+  },
+  {
+    name: 'starter',
+    label: 'Starter',
+    templates: APP_TEMPLATES.filter((template) => template.category === 'starter'),
   },
 ];
 

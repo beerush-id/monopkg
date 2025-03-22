@@ -19,6 +19,7 @@ import { sleep } from '@beerush/utils';
 import { copyCmd } from './cli/copy.js';
 import { xCmd } from './cli/exec.js';
 import { readFileSync } from 'node:fs';
+import { publishCmd } from './cli/publish.js';
 
 declare global {
   interface String {
@@ -55,6 +56,7 @@ program
   .addCommand(moveCmd)
   .addCommand(removeCmd)
   .addCommand(runCmd)
+  .addCommand(publishCmd)
   .addCommand(scriptCmd)
   .addCommand(unlinkCmd)
   .addCommand(versionCmd)

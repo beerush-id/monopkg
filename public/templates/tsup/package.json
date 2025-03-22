@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "name": "drizia",
+  "name": "tsup",
   "version": "0.0.1",
   "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
@@ -21,12 +21,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.48.0",
-    "drizzle-orm": "^0.38.4",
-    "drizzle-typebox": "^0.2.1",
-    "elysia": "^1.2.10"
-  },
   "devDependencies": {
     "@eslint/css": "^0.5.0",
     "@eslint/js": "^9.23.0",
@@ -34,7 +28,6 @@
     "esbuild-raw-plugin": "^0.2.0",
     "eslint": "^9.23.0",
     "eslint-plugin-prettier": "^5.2.3",
-    "esbuild-raw-plugin": "^0.1.1",
     "prettier": "^3.5.3",
     "publint": "^0.3.9",
     "rimraf": "^6.0.1",
