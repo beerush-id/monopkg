@@ -59,6 +59,7 @@ export default defineConfig({
               { text: 'Get Package Info', link: '/guides/info#get-information' },
               { text: 'Set Package Info', link: '/guides/info#set-information' },
               { text: 'Delete Package Info', link: '/guides/info#delete-information' },
+              { text: 'Publish Package', link: '/guides/publish' },
             ],
           },
           {
