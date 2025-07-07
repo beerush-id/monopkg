@@ -1,7 +1,6 @@
 import { spawn, type SpawnOptions, spawnSync } from 'node:child_process';
 import process from 'node:process';
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { column, txt } from './common.js';
 
@@ -62,8 +61,8 @@ export function copyDir(src: string | URL, dest: string | URL, indent = 0) {
   const files = readdirSync(src);
 
   for (const file of files) {
-    const srcPath = new URL(join(src.href, file));
-    const destPath = new URL(join(dest.href, file));
+    const srcPath = new URL(`${src.href.replace(/\/$/, '')}/${file}`);
+    const destPath = new URL(`${dest.href.replace(/\/$/, '')}/${file}`);
     const stat = statSync(srcPath);
 
     if (stat.isDirectory()) {

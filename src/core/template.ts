@@ -319,8 +319,10 @@ export const APP_TEMPLATES: PackageTemplate[] = [
     category: 'backend',
     setupFn: async ({ path, cwd }) => {
       const outDir = join(cwd, path);
+      const srcDir = new URL('../templates/drizia', import.meta.url);
+
       try {
-        copyDir(new URL('../templates/drizia', import.meta.url), outDir);
+        copyDir(srcDir, outDir);
         return { name: basename(path), type: 'module' } as PackageMeta;
       } catch (error) {
         console.error(error);
@@ -401,7 +403,7 @@ export const validate = {
       return `Package with this name already exists: ${exists.name}`;
     }
   },
-  name: (name?: string) => {
+  name: (name?: string, preventConflict = true) => {
     if (!name) {
       return 'Name is required.';
     }
@@ -415,7 +417,7 @@ export const validate = {
     }
 
     const exists = library.get(name);
-    if (exists) {
+    if (exists && preventConflict) {
       return `Package with this name already exists: ${exists.path}`;
     }
   },
