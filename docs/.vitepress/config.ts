@@ -1,10 +1,50 @@
 import { defineConfig } from 'vitepress';
 
+const BASE_URL = '';
+const PAGE_URL = 'https://beerush-id.github.io';
+const PAGE_TITLE = 'Œ MonoPKG';
+const PAGE_OPEN_TITLE = `${PAGE_TITLE} - Monorepo Package Manager`;
+const PAGE_OPEN_DESCRIPTION = 'MonoPKG is a simple, yet beautiful package manager for monorepos.';
+const PAGE_OPEN_THUMBNAIL = `${PAGE_URL}/social.jpg`;
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  base: '/monopkg/',
-  title: '▩ MonoPKG',
-  description: 'A simple, yet useful package manager for monorepos',
+  base: BASE_URL,
+  sitemap: {
+    hostname: PAGE_URL,
+  },
+  title: PAGE_TITLE,
+  description: PAGE_OPEN_DESCRIPTION,
+
+  head: [
+    ['link', { rel: 'icon', href: '/icons/favicon.ico' }],
+    ['link', { rel: 'icon', href: '/icons/favicon-196x196.png', sizes: '196x196' }],
+    ['link', { rel: 'icon', href: '/icons/favicon-128x128.png', sizes: '128x128' }],
+    ['link', { rel: 'icon', href: '/icons/favicon-96x96.png', sizes: '96x96' }],
+    ['link', { rel: 'icon', href: '/icons/favicon-32x32.png', sizes: '32x32' }],
+    ['link', { rel: 'icon', href: '/icons/favicon-16x16.png', sizes: '16x16' }],
+    ['script', { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-KRC90GFMMP' }],
+    [
+      'script',
+      {},
+      `window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-KRC90GFMMP');`,
+    ],
+    ['meta', { name: 'keywords', content: 'monorepo, package manager, monorepo package manager, monopkg, mpkg' }],
+    ['meta', { name: 'robots', content: 'index, follow' }],
+    ['meta', { name: 'og:title', content: PAGE_OPEN_TITLE }],
+    ['meta', { name: 'og:description', content: PAGE_OPEN_DESCRIPTION }],
+    ['meta', { name: 'og:url', content: PAGE_URL }],
+    ['meta', { name: 'og:image', content: PAGE_OPEN_THUMBNAIL }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: PAGE_OPEN_TITLE }],
+    ['meta', { name: 'twitter:description', content: PAGE_OPEN_DESCRIPTION }],
+    ['meta', { name: 'twitter:image', content: PAGE_OPEN_THUMBNAIL }],
+    ['meta', { name: 'twitter:creator', content: '@mahdaen' }],
+  ],
+
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [

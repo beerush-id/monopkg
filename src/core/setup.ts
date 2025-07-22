@@ -159,7 +159,7 @@ export async function setupProject({
         return {
           value: space.name,
           label: inline([
-            column([txt(Icon.BRAND).color(space.color), txt(space.name).align(keys).color(space.color)]),
+            column([txt(Icon.PACKAGE).color(space.color), txt(space.name).align(keys).color(space.color)]),
             darkGrey(' - '),
             txt(space.label).align(keys).color(space.color),
           ]),

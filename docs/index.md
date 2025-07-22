@@ -3,10 +3,10 @@
 layout: home
 
 title: 'Monorepo Package Manager'
-titleTemplate: ▩ MonoPKG
+titleTemplate: 'MonoPKG'
 
 hero:
-  name: 'MonoPKG'
+  name: '<img src="/logo.svg" alt="MonoPKG">MonoPKG'
   text: 'Many Things, At Once'
   tagline: 'A simple, yet <s>powerful</s> beautiful package manager for monorepos.'
   actions:
@@ -14,7 +14,7 @@ hero:
       text: Get Started
       link: /guides/getting-started
     - theme: alt
-      text: Learn More
+      text: Overview
       link: /intro/overview
 
   image:

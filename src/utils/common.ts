@@ -3,14 +3,15 @@ import process from 'node:process';
 import { COLOR, type ColorCode, darkGrey, getColor } from './color.js';
 
 export enum Icon {
-  BRAND = '▩',
+  BRAND = 'Œ',
+  PACKAGE = '▩',
   CHECKED = '▣',
   UNCHECKED = '▢',
   MINUS = '-',
   PLUS = '+',
 }
 
-export const icon = (text: string) => `${Icon.BRAND} ${text}`;
+export const icon = (text: string) => `${Icon.PACKAGE} ${text}`;
 
 const CTX_MAP = new Map<string, unknown>();
 export const setCtx = <T>(key: string, value: T) => {

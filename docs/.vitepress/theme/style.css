@@ -15,9 +15,35 @@
   filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.3));
 }
 
+.is-home .heading .name.clip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.is-home .heading .name.clip img {
+  width: 60px;
+  margin-left: -4px;
+}
+
 .vp-doc img {
   border-radius: 10px;
   min-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .is-home .heading {
+    margin-top: 32px;
+  }
+
+  .is-home .heading .name.clip {
+    gap: 4px;
+  }
+
+  .is-home .heading .name.clip img {
+    width: 36px;
+    margin-left: 0;
+  }
 }
 
 @media (min-width: 640px) {
