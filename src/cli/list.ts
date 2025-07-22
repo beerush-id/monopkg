@@ -71,7 +71,7 @@ export const listCmd = new Command()
             for (let i = 0; i < pkg.dependents.length; ++i) {
               const { package: subPkg, scope } = pkg.dependents[i];
               const isLast = i >= pkg.dependents.length - 1;
-              let files: Record<string, string>[] = [];
+              let files: Record<string, unknown>[] = [];
 
               if (options.reference) {
                 const cwd = join(library.path, subPkg.path);

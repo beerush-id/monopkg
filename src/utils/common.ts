@@ -6,6 +6,8 @@ export enum Icon {
   BRAND = '▩',
   CHECKED = '▣',
   UNCHECKED = '▢',
+  MINUS = '-',
+  PLUS = '+',
 }
 
 export const icon = (text: string) => `${Icon.BRAND} ${text}`;

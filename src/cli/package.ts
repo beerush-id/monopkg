@@ -7,8 +7,9 @@ import { listPointers, type PackageMeta, readMeta, writeMeta } from '../core/met
 import { library, selectPackages, Workspace } from '../core/index.js';
 import { join } from 'node:path';
 import { blue, cyan, darkGrey, green, grey, red, yellow } from '../utils/color.js';
-import { confirm, isCancel, select } from '@clack/prompts';
+import { confirm, isCancel, select, text } from '@clack/prompts';
 import { APP_TEMPLATES, setupPackage, TEMPLATE_CATEGORIES } from '../core/template.js';
+import { searchAndReplace } from '../utils/search.js';
 
 const colorMap = [yellow, cyan, green, blue, cyan, cyan, cyan, cyan, cyan, cyan, cyan];
 
@@ -246,10 +247,17 @@ export const moveCmd = new Command()
   .configureHelp(configs)
   .command('move [packages...]')
   .summary('Move package to a different workspace.')
+  .option('-r, --rename', 'Rename the package to move.')
+  .option('--name <newName>', 'New package name.')
+  .option('--path <newPath>', 'New package path (relative to the workspace).')
   .option('-w, --workspace <workspace>', 'Set the target workspace.')
-  .option('--dry', 'Dry run without making changes.')
+  .option('--verbose', 'Print more information to the console.')
   .action(async (packages: string[]) => {
     const options = moveCmd.opts();
+
+    if (options.name) {
+      options.rename = true;
+    }
 
     caption.welcome('package moving wizard!', options.dry);
 
@@ -259,15 +267,53 @@ export const moveCmd = new Command()
       cancelMessage: 'Moving packages cancelled.',
     });
 
-    if (!targets) {
+    if (!targets || !targets.length) {
       return;
+    }
+
+    if (options.rename) {
+      const hasDependents = targets.filter((pkg) => pkg.dependents.length);
+
+      if (hasDependents.length) {
+        section.print([txt('').lineTree(), txt(' Renaming packages with dependents: ').fillYellow().black().bullet()]);
+
+        hasDependents.forEach((pkg) => {
+          const dependents = pkg.dependents;
+
+          if (dependents.length) {
+            column.print([
+              txt(Icon.CHECKED).green().tree(),
+              txt('Package').yellow(),
+              txt(pkg.base).color(pkg.color),
+              txt(`has`),
+              txt(`${dependents.length}`).red(),
+              txt('dependents.'),
+            ]);
+          }
+        });
+
+        if (!options.yes) {
+          const proceed = await confirm({
+            message: yellow('Are you sure want to rename these packages?'),
+            initialValue: false,
+          });
+
+          if (isCancel(proceed) || !proceed) {
+            return caption.cancel('Rename packages cancelled.');
+          }
+        }
+      }
     }
 
     const keys = targets.map((pkg) => pkg.base);
 
     section.print([
       txt('').lineTree(),
-      column([txt('Moving the following packages:').grey().bullet()]),
+      column([
+        txt(`${options.rename ? 'Renaming' : 'Moving'} the following packages:`)
+          .grey()
+          .bullet(),
+      ]),
       ...targets.map((pkg) => {
         return column([
           txt(Icon.CHECKED).green().tree(),
@@ -278,17 +324,72 @@ export const moveCmd = new Command()
       }),
     ]);
 
+    for (const pkg of targets) {
+      if (options.rename) {
+        if (typeof options.name === 'string' && targets.length === 1 && options.name !== pkg.name) {
+          pkg.newName = options.name;
+        }
+
+        if (!pkg.newName) {
+          const newName = await text({
+            message: `New name for the package: ${txt(pkg.base).color(pkg.color).text()}`,
+            initialValue: pkg.name,
+          });
+
+          if (isCancel(newName)) {
+            return caption.cancel('Rename packages cancelled.');
+          }
+
+          if (newName !== pkg.name) {
+            pkg.newName = newName as string;
+          }
+        }
+      }
+
+      if (options.rename && pkg.newName) {
+        if (typeof options.path === 'string' && targets.length === 1 && options.path !== pkg.path) {
+          pkg.newPath = options.path;
+        }
+
+        if (!pkg.newPath && !options.path && !options.yes) {
+          const newPath = await text({
+            message: `New path for the package: ${txt(pkg.base).color(pkg.color).text()}`,
+            initialValue: pkg.base,
+          });
+
+          if (isCancel(newPath)) {
+            return caption.cancel('Rename packages cancelled.');
+          }
+
+          if (newPath !== pkg.base) {
+            pkg.newPath = newPath as string;
+          }
+        }
+      }
+    }
+
+    if (options.yes) {
+      options.workspace = targets[0].workspace.name;
+    }
+
     if (!options.workspace) {
+      const workspaces = library.workspaces
+        .filter((space) => {
+          if (!options.rename) {
+            return targets.every((pkg) => pkg.workspace.name !== space.name);
+          }
+
+          return true;
+        })
+        .map((space) => ({
+          value: space.name,
+          label: txt(icon(space.name)).color(space.color).text(),
+        }));
+
       const result = await select({
         message: grey('Which workspace to move the packages to?'),
-        options: library.workspaces
-          .filter((space) => {
-            return targets.every((pkg) => pkg.workspace.name !== space.name);
-          })
-          .map((space) => ({
-            value: space.name,
-            label: txt(icon(space.name)).color(space.color).text(),
-          })),
+        options: workspaces,
+        initialValue: options.rename ? targets[0]?.workspace.name : workspaces[0]?.value,
       });
 
       if (isCancel(result)) {
@@ -331,13 +432,15 @@ export const moveCmd = new Command()
       column([txt('To workspace').grey().tree(), txt(workspace.name).color(workspace.color)]),
     ]);
 
-    const proceed = await confirm({
-      message: yellow('Are you sure you want to move these packages?'),
-      initialValue: false,
-    });
+    if (!options.yes) {
+      const proceed = await confirm({
+        message: yellow('Are you sure you want to move these packages?'),
+        initialValue: false,
+      });
 
-    if (isCancel(proceed) || !proceed) {
-      return caption.cancel('Moving packages cancelled.');
+      if (isCancel(proceed) || !proceed) {
+        return caption.cancel('Moving packages cancelled.');
+      }
     }
 
     const moved: string[] = [];
@@ -348,17 +451,64 @@ export const moveCmd = new Command()
           title: column([
             txt('Moving package').grey(),
             txt(pkg.base).color(pkg.color),
+            txt('from').grey(),
+            txt(pkg.workspace.name).color(pkg.workspace.color),
             txt('to').grey(),
             txt(workspace.name).color(workspace.color),
+            txt('...').grey(),
           ]),
           task: async () => {
             const origin = join(library.path, pkg.path);
             const originPath = origin.replace(library.path, '').replace(/^\\/, '').replace(/\\/g, '/');
-            const destination = join(library.path, workspace.path, pkg.base);
+            const destination = join(library.path, workspace.path, pkg.newPath ?? pkg.base);
             const destinationPath = destination.replace(library.path, '').replace(/^\\/, '').replace(/\\/g, '/');
             const exist = existsSync(destination);
 
-            if (exist) {
+            if (!pkg.newName && originPath === destinationPath) {
+              return section([txt(' No changes were made. ').fillWhite().black()]);
+            }
+
+            if (pkg.newName) {
+              for (const { package: dep } of pkg.dependents) {
+                column.print([
+                  txt('Applying new name to its dependent:').grey().bullet(),
+                  inline([
+                    txt(dep.workspace.name).color(dep.workspace.color),
+                    txt('/').darkGrey(),
+                    txt(dep.base).color(dep.color),
+                  ]),
+                ]);
+
+                searchAndReplace(pkg.name, pkg.newName, {
+                  cwd: join(library.path, dep.path),
+                  dry: options.dry,
+                  verbose: options.verbose,
+                });
+
+                column.print([
+                  txt('New name applied to its dependent:').grey().done(),
+                  inline([
+                    txt(dep.workspace.name).color(dep.workspace.color),
+                    txt('/').darkGrey(),
+                    txt(dep.base).color(dep.color),
+                  ]),
+                ]);
+              }
+
+              column.print([txt('Applying new name...').grey().bullet()]);
+
+              const oldName = pkg.name;
+              if (options.dry) {
+                pkg.set('name', pkg.newName);
+              } else {
+                pkg.set('name', pkg.newName, true);
+              }
+
+              column.print([txt(oldName).red().strike().tree(), txt('->').green(), txt(pkg.name).green()]);
+              column.print([txt('New name applied.').grey().done()]);
+            }
+
+            if (exist && !options.rename) {
               return new Error(
                 column([
                   txt('Package').red(),
@@ -369,20 +519,25 @@ export const moveCmd = new Command()
               );
             }
 
-            if (!options.dry) {
+            if (!options.dry && origin !== destination) {
               renameSync(origin, destination);
             }
 
-            moved.push(pkg.base);
-            return section([
-              column([
-                txt('Package').grey(),
-                txt(pkg.base).color(pkg.color),
-                txt('moved to').grey(),
-                txt(workspace.name).color(workspace.color),
-              ]),
-              column([txt(originPath).darkGrey().strike(), txt('->').grey(), txt(destinationPath).cyan()]),
-            ]);
+            if (pkg.newName || originPath !== destinationPath) {
+              moved.push(pkg.newPath ?? pkg.base);
+            }
+
+            if (originPath !== destinationPath) {
+              return section([
+                column([
+                  txt('Package').grey(),
+                  txt(pkg.base).color(pkg.color),
+                  txt('moved to').grey(),
+                  txt(workspace.name).color(workspace.color),
+                ]),
+                column([txt(originPath).red().strike(), txt('->').grey(), txt(destinationPath).cyan()]),
+              ]);
+            }
           },
         };
       })
@@ -403,3 +558,5 @@ export const moveCmd = new Command()
 
     caption.success('Moving packages complete.');
   });
+
+addOverrides(moveCmd);

@@ -49,6 +49,9 @@ export class Package {
   public meta: PackageMeta;
   public link: { library: string; workspace: string };
 
+  public newName?: string;
+  public newPath?: string;
+
   public get type(): string {
     return this.meta.type;
   }

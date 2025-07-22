@@ -103,7 +103,7 @@ export default defineConfig({
     socialLinks: [{ icon: 'github', link: 'https://github.com/beerush-id/monopkg' }],
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2025-present Beerush',
+      copyright: 'Copyright © 2025-present Beerush.',
     },
   },
 });
