@@ -30,6 +30,8 @@ yarn dlx monopkg list [options]
 
 - **`-w`**, `--workspace` - Root workspaces of the packages.
 - **`-i`**, `--info` - Show information of the specified fields.
+- `--usage` - Show packages that depend on it.
+- `--reference` - Show files that depend on it.
 - `--public` - Show only public packages.
 - `--private` - Show only private packages.
 - `--restricted` - Show only restricted packages.
@@ -142,5 +144,33 @@ yarn dlx monopkg list --private -w apps --info name version type
 ::: info Sample Output
 
 ![List Packages](/list.jpg)
+
+:::
+
+List all packages and print the usage in packages and files.
+
+::: code-group
+
+```bash [Global]
+monopkg list --usage --reference
+```
+
+```bash [Bun]
+bun x monopkg list --usage --reference
+```
+
+```bash [NPM]
+npx monopkg list --usage --reference
+```
+
+```bash [Yarn]
+yarn dlx monopkg list --usage --reference
+```
+
+:::
+
+::: info Sample Output
+
+![List Packages](/list-usage.jpg)
 
 :::

@@ -40,7 +40,8 @@
     "@beerush/utils": "^0.4.0",
     "@clack/prompts": "^0.9.1",
     "commander": "^13.1.0",
-    "esbuild-raw-plugin": "^0.1.1"
+    "esbuild-raw-plugin": "^0.1.1",
+    "glob": "^11.0.3"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
