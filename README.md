@@ -10,4 +10,4 @@ process smoother and more efficient. If you enjoy doing everything manually, ski
 > neighborhood tool designed to make package management in a monorepo a breeze. So, no need for epic showdowns or
 > comparisons. Just enjoy the simplicity! 🍺
 
-Check out the [**Documentation**](https://beerush-id.github.io/monopkg) to get started with MonoPKG.
+Check out the [**Documentation**](https://monopkg.beerush.io) to get started with MonoPKG.
