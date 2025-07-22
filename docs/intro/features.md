@@ -67,8 +67,8 @@ command, you can sprinkle that script magic across your entire monorepo.
 You want to add `format` script to all packages and change the `build` script to include the `format` script.
 
 ```sh
-monopkg script add format="prettier --write ." -r packages
-monopkg script add build="bun run format && rimraf dist && tsup && publint" -r packages
+monopkg script add format="prettier --write ." -w packages
+monopkg script add build="bun run format && rimraf dist && tsup && publint" -w packages
 ```
 
 The above command adds a `format` script and update the `build` script to all packages under the `packages` folder. It's

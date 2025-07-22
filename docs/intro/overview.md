@@ -90,7 +90,7 @@ Avoid the hassle of editing each `package.json` file manually. Use MonoPKG to ad
 ::: details Don't Look! 🥷
 
 ```sh
-monopkg script add dev="tsup --watch" build="rimraf dist && tsup" -r packages
+monopkg script add dev="tsup --watch" build="rimraf dist && tsup" -w packages
 ```
 
 The above command is equivalent to going through each package under `packages` folder and adding the script manually.
