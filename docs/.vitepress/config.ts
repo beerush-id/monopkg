@@ -23,14 +23,14 @@ export default defineConfig({
     ['link', { rel: 'icon', href: '/icons/favicon-96x96.png', sizes: '96x96' }],
     ['link', { rel: 'icon', href: '/icons/favicon-32x32.png', sizes: '32x32' }],
     ['link', { rel: 'icon', href: '/icons/favicon-16x16.png', sizes: '16x16' }],
-    ['script', { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-KRC90GFMMP' }],
+    ['script', { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-LVTMBF9XGE' }],
     [
       'script',
       {},
       `window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-KRC90GFMMP');`,
+      gtag('config', 'G-LVTMBF9XGE');`,
     ],
     ['meta', { name: 'keywords', content: 'monorepo, package manager, monorepo package manager, monopkg, mpkg' }],
     ['meta', { name: 'robots', content: 'index, follow' }],
