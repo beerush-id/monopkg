@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress';
 
 const BASE_URL = '';
-const PAGE_URL = 'https://beerush-id.github.io';
+const PAGE_URL = 'https://monopkg.beerush.io';
 const PAGE_TITLE = 'Œ MonoPKG';
 const PAGE_OPEN_TITLE = `${PAGE_TITLE} - Monorepo Package Manager`;
 const PAGE_OPEN_DESCRIPTION = 'MonoPKG is a simple, yet beautiful package manager for monorepos.';
