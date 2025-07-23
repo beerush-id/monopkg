@@ -157,7 +157,7 @@ export class Library {
     this.status = 'ready';
   }
 
-  public add(spaces: string[], mkdir = true, dry?: boolean) {
+  public add(spaces: string[], mkdir = true, dry?: boolean, scopes?: Record<string, string>) {
     if (!Array.isArray(this.meta.workspaces)) this.meta.workspaces = [];
 
     for (let pattern of spaces) {
@@ -176,7 +176,14 @@ export class Library {
       if (mkdir && !dry) {
         const dir = join(this.path, path);
         mkdirSync(dir, { recursive: true });
-        writeFileSync(join(dir, '.gitkeep'), '', 'utf-8');
+        const scope = (scopes ?? {})[name];
+
+        if (scope) {
+          const content = JSON.stringify({ name, scope }, null, 2);
+          writeFileSync(join(dir, 'workspace.json'), content);
+        } else {
+          writeFileSync(join(dir, '.gitkeep'), '', 'utf-8');
+        }
       }
     }
 

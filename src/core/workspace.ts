@@ -2,6 +2,9 @@ import { LIBRARIES, matchPkg, Package, WORKSPACE_PACKAGES, WORKSPACES } from './
 import { type Library } from './library.js';
 import { BASE_COLOR, PKG_QUERY_OPTIONS, type QueryOptions } from './shared.js';
 import { list } from './meta.js';
+import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 export class Workspace {
   public id = crypto.randomUUID();
@@ -14,6 +17,7 @@ export class Workspace {
 
   public style: (text: string, prefix?: string) => string;
   public color: number;
+  public scope?: string;
 
   constructor(
     library: Library,
@@ -40,6 +44,17 @@ export class Workspace {
   }
 
   public load() {
+    try {
+      const metaUrl = pathToFileURL(join(this.library.path, this.name, 'workspace.json'));
+      const metaText = readFileSync(metaUrl, 'utf8');
+      const meta = JSON.parse(metaText);
+
+      this.scope = meta?.scope ?? this.library.name;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err) {
+      // Ignore
+      // console.error(err);
+    }
     const pointers = list(this.path, this.library.path);
 
     for (const pointer of pointers) {

@@ -1,8 +1,8 @@
 import { confirm, isCancel, select, text } from '@clack/prompts';
 import { basename, join } from 'node:path';
-import { library } from './index.js';
+import { library, Workspace } from './index.js';
 import { getExeCommand } from './pm.js';
-import { column, txt } from '../utils/common.js';
+import { column, inline, txt } from '../utils/common.js';
 import { COLOR, cyan, green, purple } from '../utils/color.js';
 import { caption } from '../cli/program.js';
 import type { PackageMeta } from './meta.js';
@@ -379,6 +379,7 @@ export type CreateAppOptions = {
   template?: string;
   path?: string;
   name?: string;
+  workspace: Workspace;
 };
 
 const cancelSetup = () => caption.cancel('Setup cancelled.');
@@ -400,7 +401,7 @@ export const validate = {
 
     const exists = library.get(basename(path));
     if (exists) {
-      return `Package with this name already exists: ${exists.name}`;
+      return `Package with this path already exists: ${exists.name}`;
     }
   },
   name: (name?: string, preventConflict = true) => {
@@ -423,11 +424,13 @@ export const validate = {
   },
 };
 
-export async function setupPackage({ template, category, name, path }: CreateAppOptions) {
+export async function setupPackage({ template, category, name, path, workspace }: CreateAppOptions) {
+  const scope = (workspace.scope ?? library.meta.name).replace(/^@/, '');
+
   if (!path) {
     path = (await text({
       message: 'Where would you like to create the package?',
-      validate: validate.path,
+      // validate: validate.path,
     })) as string;
 
     if (isCancel(path)) {
@@ -436,16 +439,41 @@ export async function setupPackage({ template, category, name, path }: CreateApp
   }
 
   if (!name) {
-    const scope = library.meta.name.replace(/^@/, '');
     name = (await text({
       message: 'What is the name of your package?',
       initialValue: `@${scope}/${basename(path)}`,
-      validate: validate.name,
+      // validate: validate.name,
     })) as string;
 
     if (isCancel(name)) {
       return cancelSetup();
     }
+  }
+
+  const outPath = join(workspace.name, path).replace(/\\/g, '/');
+  const existByName = library.get(name);
+  const existByPath = library.get(outPath);
+
+  if (existByName) {
+    column.print([
+      txt(`Package with name`).red().error(),
+      txt(name).green(),
+      txt('already exists.').red(),
+      inline([txt('(').darkGrey(), txt(existByName.path).color(existByName.color), txt(')').darkGrey()]),
+    ]);
+
+    return cancelSetup();
+  }
+
+  if (existByPath) {
+    column.print([
+      txt('Package with path').red().error(),
+      txt(outPath).green(),
+      txt('already exists.').red(),
+      inline([txt('(').darkGrey(), txt(existByPath.name).color(existByPath.color), txt(')').darkGrey()]),
+    ]);
+
+    return cancelSetup();
   }
 
   if (!template && !category) {
@@ -550,11 +578,6 @@ export async function setupPackage({ template, category, name, path }: CreateApp
         flags.push(option.name, `"${result}"`);
       }
     }
-  }
-
-  const exist = library.get(name) ?? library.get(basename(path));
-  if (exist) {
-    return cancelSetup();
   }
 
   if (setup.nameForward) {

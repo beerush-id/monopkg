@@ -15,13 +15,38 @@ const addCmd = new Command()
   .configureHelp(configs)
   .command('add [workspaces...]')
   .description('Add workspaces to the project.')
+  .option('-s, --scope <scope>', 'Set the scope name of the workspace.')
   .option('--cold', 'Skip creating new directories')
   .action(async (workspaces: string[] = []) => {
-    const { cold, dry } = addCmd.opts();
+    const { cold, dry, scope: initScope } = addCmd.opts();
+    const scopes: Record<string, string> = {};
+
+    if (workspaces.length === 1 && initScope) {
+      scopes[workspaces[0]] = initScope;
+    }
 
     workspaceIntro(dry);
 
     section.print([txt('').lineTree(), txt('Add workspaces to the project.').grey().bullet()]);
+
+    const addScope = async (name: string) => {
+      const scope = await text({
+        message: 'What is the scope of the workspace? (Leave blank or press "Ctrl + C" to skip.)',
+        initialValue: `@${library.name.replace(/^@/, '')}-${name}`,
+        validate: (value) => {
+          const exist = library.workspaces.find((w) => w.scope === value);
+          const prepared = Object.values(scopes).some((v) => v === value);
+
+          if (exist || prepared) {
+            return `Workspace with scope ${value} already exists.`;
+          }
+        },
+      });
+
+      if (scope && !isCancel(scope)) {
+        scopes[name] = scope;
+      }
+    };
 
     const addSpace = async () => {
       const name = await text({
@@ -32,7 +57,7 @@ const addCmd = new Command()
           }
 
           if (library.getSpace(name)) {
-            return 'Workspace already exists.';
+            return `Workspace with name ${name} already exists.`;
           }
         },
       });
@@ -43,6 +68,7 @@ const addCmd = new Command()
 
       if (name) {
         workspaces.push(name);
+        await addScope(name);
         await addSpace();
       } else {
         return;
@@ -62,7 +88,7 @@ const addCmd = new Command()
       {
         title: grey('Adding workspaces to the project...'),
         task: async () => {
-          library.add(workspaces, !cold, dry);
+          library.add(workspaces, !cold, dry, scopes);
           return green('Workspaces added to the project.');
         },
       },
@@ -70,13 +96,22 @@ const addCmd = new Command()
 
     const newSpaces = library.findSpace(...workspaces);
     for (const space of newSpaces) {
-      inline.print(
-        column([
+      if (scopes[space.name]) {
+        column.print([
           txt(`${icon(space.name)}`)
             .color(space.color)
             .tree(),
-        ])
-      );
+          inline([txt('(').darkGrey(), txt(scopes[space.name]).grey(), txt(')').darkGrey()]),
+        ]);
+      } else {
+        inline.print(
+          column([
+            txt(`${icon(space.name)}`)
+              .color(space.color)
+              .tree(),
+          ])
+        );
+      }
     }
 
     caption.success('Workspaces added to the project.');

@@ -35,6 +35,7 @@ In the interactive mode, you can enter multiple workspace name to be added. The 
 
 ## Options
 
+- **`-s`**, `--scope` - Set the scope name of the new workspace.
 - `--cold` - Cold run, skip creating the workspace folder.
 
 ## Examples
@@ -88,6 +89,74 @@ yarn dlx monopkg workspace add tools
 }
 
 ```
+
+:::
+
+### With Custom Scope
+
+Add a new workspace named `tools` with a custom scope `@app-tools`:
+
+::: code-group
+
+```bash [Global] 
+monopkg workspace add tools --scope @app-tools
+```
+
+```bash [Bun]
+bun x monopkg workspace add tools --scope @app-tools
+```
+
+```bash [NPM]
+npx monopkg workspace add tools --scope @app-tools
+```
+
+```bash [Yarn]
+yarn dlx monopkg workspace add tools --scope @app-tools
+```
+
+:::
+
+::: info Output
+
+**`Folder Structure`**
+
+```json
+├─ packages
+|  ├─ pkg-a
+|  ├─ pkg-b
+├─ tools // [!code ++]
+|  └─ workspace.json // [!code ++]
+└─ package.json
+
+```
+
+**`package.json`**
+
+```json
+{
+  "workspaces": [
+    "packages/*",
+    "tools/*" // [!code ++]
+  ]
+}
+
+```
+
+**`tools/workspace.json`**
+
+```json
+{
+  "name": "tools", // [!code ++]
+  "scope": "@app-tools" // [!code ++]
+}
+
+```
+
+:::
+
+::: tip Custom Scope
+
+By setting a custom scope, the workspace will have its own `workspace.json` file with the specified scope. When creating a new package in this workspace, the scope will be used as the default scope for the package in the interactive mode.
 
 :::
 
@@ -146,6 +215,12 @@ yarn dlx monopkg workspace add tools apps
 
 :::
 
+::: warning Custom Scope
+
+When adding multiple workspaces, custom scopes can only be set in the interactive mode. Use the `monopkg workspace add` without any arguments to enter the interactive mode.
+
+:::
+
 ---
 
 ### Skip Creating Workspace Folder
@@ -194,3 +269,11 @@ yarn dlx monopkg workspace add tools --cold
 }
 
 ```
+
+:::
+
+::: warning Custom Scope
+
+When using the `--cold` option, the workspace folder will not be created, and the `workspace.json` file will not be generated. Do not use the `--cold` option if you want to set a custom scope, as the `workspace.json` file is required for that.
+
+:::

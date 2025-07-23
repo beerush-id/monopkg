@@ -111,6 +111,7 @@ export const createCmd = new Command()
       template,
       name,
       path: cwd ?? path,
+      workspace: space,
     });
 
     if (!setup) {
@@ -122,7 +123,7 @@ export const createCmd = new Command()
     const version = '0.0.1';
     const workDir = cwd ? join(library.path, space.path, outPath) : join(library.path, space.path);
 
-    const existing = library.get(outName) ?? library.get(outPath);
+    const existing = library.get(outName) ?? library.get(join(space.name, outPath));
 
     if (existing) {
       column.print([red('ERROR_EXIST: Package'), green(outName), red('already exists:')]);
