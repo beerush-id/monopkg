@@ -262,36 +262,51 @@ export const moveCmd = new Command()
 
     caption.welcome('package moving wizard!', options.dry);
 
-    const targets = await selectPackages(library, {
+    if ((options.name || options.path) && packages.length > 1) {
+      section.print([
+        txt('').lineTree(),
+        column([
+          txt('Options').red().lineTree(),
+          txt('--name').cyan(),
+          txt('and').red(),
+          txt('--path').cyan(),
+          txt('are only applicable for a single package.').red(),
+        ]),
+        column([txt('Skipping these options for multiple packages.').grey().lineTree()]),
+      ]);
+
+      delete options.name;
+      delete options.path;
+    }
+
+    const workspaceOptions = library.workspaces.map((space) => ({
+      value: space.name,
+      label: txt(icon(space.name)).color(space.color).text(),
+    }));
+    const targetWorkspaces: Record<string, Workspace> = {};
+    const targetPackages = await selectPackages(library, {
       filter: packages,
       subTitle: 'move from',
       cancelMessage: 'Moving packages cancelled.',
     });
 
-    if (!targets || !targets.length) {
+    if (!targetPackages || !targetPackages.length) {
       return;
     }
 
-    if (options.rename) {
-      const hasDependents = targets.filter((pkg) => pkg.dependents.length);
-
-      if (hasDependents.length) {
-        section.print([txt('').lineTree(), txt(' Renaming packages with dependents: ').fillYellow().black().bullet()]);
-
-        hasDependents.forEach((pkg) => {
-          const dependents = pkg.dependents;
-
-          if (dependents.length) {
-            column.print([
-              txt(Icon.CHECKED).green().tree(),
-              txt('Package').yellow(),
-              txt(pkg.base).color(pkg.color),
-              txt(`has`),
-              txt(`${dependents.length}`).red(),
-              txt('dependents.'),
-            ]);
-          }
-        });
+    for (const pkg of targetPackages) {
+      if (pkg.dependents?.length && options.rename) {
+        section.print([
+          txt('').lineTree(),
+          column([
+            txt(Icon.CHECKED).green().tree(),
+            txt('Package').grey(),
+            txt(pkg.base).color(pkg.color),
+            txt(`has`),
+            txt(`${pkg.dependents.length}`).red(),
+            txt('dependents.'),
+          ]),
+        ]);
 
         if (!options.yes) {
           const proceed = await confirm({
@@ -304,37 +319,76 @@ export const moveCmd = new Command()
           }
         }
       }
-    }
 
-    const keys = targets.map((pkg) => pkg.base);
+      let workspaceName: string = options.workspace;
 
-    section.print([
-      txt('').lineTree(),
-      column([
-        txt(`${options.rename ? 'Renaming' : 'Moving'} the following packages:`)
-          .grey()
-          .bullet(),
-      ]),
-      ...targets.map((pkg) => {
-        return column([
-          txt(Icon.CHECKED).green().tree(),
-          txt(pkg.base).color(pkg.color).align(keys),
-          txt('from').grey(),
-          txt(library.workspace.name).color(library.workspace.color),
+      if (!workspaceName && pkg.newName && options.yes) {
+        workspaceName = pkg.workspace.name;
+      }
+
+      if (!workspaceName) {
+        workspaceName = (await select({
+          message: column([
+            txt('Which workspace to move the package').grey(),
+            txt(pkg.base).color(pkg.color),
+            txt('to?').grey(),
+          ]),
+          options: workspaceOptions,
+          initialValue: pkg.workspace.name,
+        })) as string;
+
+        if (isCancel(workspaceName)) {
+          return caption.cancel('Moving packages cancelled.');
+        }
+      }
+
+      const workspace = library.getSpace(workspaceName);
+
+      if (!workspace) {
+        section.print([
+          txt('').lineTree(),
+          column([
+            txt('ERROR_ROOT: Workspace').red().tree(),
+            txt(workspaceName).green(),
+            txt('can not be found!').red(),
+          ]),
+          txt('').lineTree(),
         ]);
-      }),
-    ]);
 
-    for (const pkg of targets) {
+        inline.print(txt('Available workspaces:').grey().tree());
+
+        library.workspaces.forEach((space) => {
+          const label = txt(icon(space.name)).color(space.color);
+          inline.print(label.tree(0));
+        });
+
+        return caption.cancel('Moving packages cancelled.');
+      }
+
+      targetWorkspaces[pkg.name] = workspace;
+
+      const [scopeName, name] = pkg.name.split('/');
+      const pkgName = name || scopeName;
+
+      let pkgScope = name ? scopeName : (workspace.scope ?? library.name);
+
+      if (pkg.workspace.name !== workspace.name && workspace.scope) {
+        pkgScope = workspace.scope;
+      }
+
+      if (!pkgScope.startsWith('@')) {
+        pkgScope = `@${pkgScope}`;
+      }
+
       if (options.rename) {
-        if (typeof options.name === 'string' && targets.length === 1 && options.name !== pkg.name) {
+        if (typeof options.name === 'string' && targetPackages.length === 1 && options.name !== pkg.name) {
           pkg.newName = options.name;
         }
 
         if (!pkg.newName) {
           const newName = await text({
             message: `New name for the package: ${txt(pkg.base).color(pkg.color).text()}`,
-            initialValue: pkg.name,
+            initialValue: `${pkgScope}/${pkgName}`,
           });
 
           if (isCancel(newName)) {
@@ -348,11 +402,11 @@ export const moveCmd = new Command()
       }
 
       if (options.rename && pkg.newName) {
-        if (typeof options.path === 'string' && targets.length === 1 && options.path !== pkg.path) {
+        if (typeof options.path === 'string' && targetPackages.length === 1 && options.path !== pkg.path) {
           pkg.newPath = options.path;
         }
 
-        if (!pkg.newPath && !options.path && !options.yes) {
+        if (!pkg.newPath && !options.path) {
           const newPath = await text({
             message: `New path for the package: ${txt(pkg.base).color(pkg.color).text()}`,
             initialValue: pkg.base,
@@ -369,107 +423,88 @@ export const moveCmd = new Command()
       }
     }
 
-    if (options.yes) {
-      options.workspace = targets[0].workspace.name;
-    }
+    const changedPackages = targetPackages.filter((pkg) => {
+      const workspace = targetWorkspaces[pkg.name];
+      return pkg.newName || pkg.workspace.name !== workspace.name || pkg.newPath;
+    });
 
-    if (!options.workspace) {
-      const workspaces = library.workspaces
-        .filter((space) => {
-          if (!options.rename) {
-            return targets.every((pkg) => pkg.workspace.name !== space.name);
-          }
-
-          return true;
-        })
-        .map((space) => ({
-          value: space.name,
-          label: txt(icon(space.name)).color(space.color).text(),
-        }));
-
-      const result = await select({
-        message: grey('Which workspace to move the packages to?'),
-        options: workspaces,
-        initialValue: options.rename ? targets[0]?.workspace.name : workspaces[0]?.value,
-      });
-
-      if (isCancel(result)) {
-        return caption.cancel('Moving packages cancelled.');
-      }
-
-      options.workspace = result as never;
-    }
-
-    const workspace = library.getSpace(options.workspace);
-
-    if (!workspace) {
+    if (changedPackages.length) {
       section.print([
         txt('').lineTree(),
-        column([
-          txt('ERROR_ROOT: Workspace').red().tree(),
-          txt(options.workspace).green(),
-          txt('can not be found!').red(),
-        ]),
-        txt('').lineTree(),
+        column([txt(' Moving the following packages: ').fillYellow().black().bullet()]),
+        ...changedPackages.flatMap((pkg) => {
+          const columns = [column([txt(Icon.CHECKED).green().tree(), txt(pkg.base).color(pkg.color)])];
+          const workspace = targetWorkspaces[pkg.name];
+
+          if (pkg.newName) {
+            columns.push(
+              column([
+                txt('Renaming from').grey().tree(1),
+                txt(pkg.name).color(pkg.color),
+                txt('to').grey(),
+                txt(pkg.newName).green(),
+              ])
+            );
+          }
+
+          if (pkg.workspace.name !== workspace.name || pkg.newPath) {
+            columns.push(
+              column([
+                txt('Moving from').grey().tree(1),
+                inline([
+                  txt(pkg.workspace.name).color(pkg.workspace.color),
+                  txt('/').darkGrey(),
+                  txt(pkg.base).color(pkg.color),
+                ]),
+                txt('to').grey(),
+                inline([
+                  txt(workspace.name).color(workspace.color),
+                  txt('/').darkGrey(),
+                  txt(pkg.newPath ?? pkg.base).color(pkg.color),
+                ]),
+              ])
+            );
+          }
+
+          return columns;
+        }),
       ]);
 
-      inline.print(txt('Available workspaces:').grey().tree());
+      if (!options.yes) {
+        const proceed = await confirm({
+          message: yellow('Are you sure you want to move these packages?'),
+          initialValue: false,
+        });
 
-      library.workspaces.forEach((space, i) => {
-        const label = txt(icon(space.name)).color(space.color);
-
-        if (i === library.workspaces.length - 1) {
-          inline.print(label.endTree(0));
-        } else {
-          inline.print(label.tree(0));
+        if (isCancel(proceed) || !proceed) {
+          return caption.cancel('Moving packages cancelled.');
         }
-      });
-
-      return;
-    }
-
-    section.print([
-      txt('').lineTree(),
-      column([txt('To workspace').grey().tree(), txt(workspace.name).color(workspace.color)]),
-    ]);
-
-    if (!options.yes) {
-      const proceed = await confirm({
-        message: yellow('Are you sure you want to move these packages?'),
-        initialValue: false,
-      });
-
-      if (isCancel(proceed) || !proceed) {
-        return caption.cancel('Moving packages cancelled.');
       }
+    } else {
+      return caption.cancel('Moving packages cancelled due no changes.');
     }
 
-    const moved: string[] = [];
+    const changeList: string[] = [];
 
     await runTask(
-      targets.map((pkg) => {
-        return {
-          title: column([
-            txt('Moving package').grey(),
-            txt(pkg.base).color(pkg.color),
-            txt('from').grey(),
-            txt(pkg.workspace.name).color(pkg.workspace.color),
-            txt('to').grey(),
-            txt(workspace.name).color(workspace.color),
-            txt('...').grey(),
-          ]),
-          task: async () => {
-            const origin = join(library.path, pkg.path);
-            const originPath = origin.replace(library.path, '').replace(/^\\/, '').replace(/\\/g, '/');
-            const destination = join(library.path, workspace.path, pkg.newPath ?? pkg.base);
-            const destinationPath = destination.replace(library.path, '').replace(/^\\/, '').replace(/\\/g, '/');
-            const exist = existsSync(destination);
+      changedPackages
+        .filter((pkg) => pkg.newName)
+        .map((pkg) => {
+          const workspace = targetWorkspaces[pkg.name];
+          const oldName = pkg.name;
+          const newName = pkg.newName as string;
 
-            if (!pkg.newName && originPath === destinationPath) {
-              return section([txt(' No changes were made. ').fillWhite().black()]);
-            }
-
-            if (pkg.newName) {
+          return {
+            title: column([
+              txt('Renaming').grey(),
+              txt(pkg.base).color(pkg.color),
+              txt('from').grey(),
+              txt(oldName).color(pkg.color),
+              txt('to').grey(),
+              txt(newName).green(),
+              txt('...').grey(),
+            ]),
+            task: async () => {
               for (const { package: dep } of pkg.dependents) {
                 column.print([
                   txt('Applying new name to its dependent:').grey().bullet(),
@@ -480,7 +515,7 @@ export const moveCmd = new Command()
                   ]),
                 ]);
 
-                searchAndReplace(pkg.name, pkg.newName, {
+                searchAndReplace(pkg.name, newName, {
                   cwd: join(library.path, dep.path),
                   dry: options.dry,
                   verbose: options.verbose,
@@ -494,57 +529,89 @@ export const moveCmd = new Command()
                     txt(dep.base).color(dep.color),
                   ]),
                 ]);
+                column.print([txt('').lineTree()]);
               }
 
               column.print([txt('Applying new name...').grey().bullet()]);
 
-              const oldName = pkg.name;
               if (options.dry) {
-                pkg.set('name', pkg.newName);
+                pkg.set('name', newName);
               } else {
-                pkg.set('name', pkg.newName, true);
+                pkg.set('name', newName, true);
               }
+
+              targetWorkspaces[pkg.name] = workspace;
 
               column.print([txt(oldName).red().strike().tree(), txt('->').green(), txt(pkg.name).green()]);
               column.print([txt('New name applied.').grey().done()]);
-            }
+              column.print([txt('').lineTree()]);
 
-            if (exist && !options.rename) {
-              return new Error(
-                column([
-                  txt('Package').red(),
-                  txt(pkg.base).color(pkg.color),
-                  txt('already exists in workspace').red(),
-                  txt(workspace.name).color(workspace.color),
-                ])
-              );
-            }
+              changeList.push(pkg.name);
 
-            if (!options.dry && origin !== destination) {
-              renameSync(origin, destination);
-            }
-
-            if (pkg.newName || originPath !== destinationPath) {
-              moved.push(pkg.newPath ?? pkg.base);
-            }
-
-            if (originPath !== destinationPath) {
               return section([
-                column([
-                  txt('Package').grey(),
-                  txt(pkg.base).color(pkg.color),
-                  txt('moved to').grey(),
-                  txt(workspace.name).color(workspace.color),
-                ]),
-                column([txt(originPath).red().strike(), txt('->').grey(), txt(destinationPath).cyan()]),
+                column([txt('Package').grey(), txt(pkg.base).color(pkg.color), txt('renamed:').grey()]),
+                column([txt(oldName).red().strike(), txt('->').grey(), txt(pkg.name).cyan()]),
               ]);
-            }
-          },
-        };
-      })
+            },
+          };
+        })
     );
 
-    if (moved.length) {
+    await runTask(
+      changedPackages
+        .filter((pkg) => {
+          const workspace = targetWorkspaces[pkg.name];
+          return pkg.newPath || pkg.workspace.name !== workspace.name;
+        })
+        .map((pkg) => {
+          const workspace = targetWorkspaces[pkg.name];
+
+          return {
+            title: column([
+              txt('Moving').grey(),
+              txt(pkg.base).color(pkg.color),
+              txt('from').grey(),
+              txt(pkg.workspace.name).color(pkg.workspace.color),
+              txt('to').grey(),
+              txt(workspace.name).color(workspace.color),
+              txt('...').grey(),
+            ]),
+            task: async () => {
+              const origin = join(library.path, pkg.path);
+              const originPath = origin.replace(library.path, '').replace(/^\\/, '').replace(/\\/g, '/');
+              const destination = join(library.path, workspace.path, pkg.newPath ?? pkg.base);
+              const destinationPath = destination.replace(library.path, '').replace(/^\\/, '').replace(/\\/g, '/');
+              const exist = existsSync(destination);
+
+              if (exist) {
+                return new Error(
+                  column([
+                    txt('Package').red(),
+                    txt(pkg.base).color(pkg.color),
+                    txt('already exists in workspace').red(),
+                    txt(workspace.name).color(workspace.color),
+                  ])
+                );
+              }
+
+              if (!options.dry && origin !== destination) {
+                renameSync(origin, destination);
+              }
+
+              if (originPath !== destinationPath) {
+                changeList.push(pkg.newPath ?? pkg.base);
+
+                return section([
+                  column([txt('Package').grey(), txt(pkg.base).color(pkg.color), txt('moved:').grey()]),
+                  column([txt(originPath).red().strike(), txt('->').grey(), txt(destinationPath).cyan()]),
+                ]);
+              }
+            },
+          };
+        })
+    );
+
+    if (changeList.length) {
       await runTask({
         title: grey('Propagating changes...'),
         task: async () => {
