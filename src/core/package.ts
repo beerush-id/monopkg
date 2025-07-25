@@ -117,12 +117,14 @@ export class Package {
   public get dependencies() {
     const dependencies: Package[] = [];
 
-    for (const [name] of Object.entries({
+    const targetDependencies = Object.entries({
       ...this.meta.dependencies,
       ...this.meta.devDependencies,
       ...this.meta.peerDependencies,
       ...this.meta.optionalDependencies,
-    })) {
+    }).filter(([, value]) => value === 'workspace:*');
+
+    for (const [name] of targetDependencies) {
       const dependency = this.library.get(name);
 
       if (dependency && !dependencies.includes(dependency)) {
