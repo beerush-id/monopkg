@@ -18,8 +18,9 @@ import { yellow } from './utils/color.js';
 import { sleep } from '@beerush/utils';
 import { copyCmd } from './cli/copy.js';
 import { xCmd } from './cli/exec.js';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { publishCmd } from './cli/publish.js';
+import { fileURLToPath } from 'node:url';
 
 declare global {
   interface String {
@@ -64,6 +65,19 @@ program
   .addCommand(xCmd);
 
 export async function main() {
+  const templatePath = new URL('./templates', import.meta.url);
+  const templateSource = new URL('./templates.tar.tgz', import.meta.url);
+  const extractCwd = new URL('.', import.meta.url);
+  const isTemplateExists = existsSync(templatePath);
+
+  if (!isTemplateExists) {
+    const { extract } = await import('tar');
+    await extract({
+      f: fileURLToPath(templateSource),
+      cwd: fileURLToPath(extractCwd),
+    });
+  }
+
   if (shouldTired()) {
     render(yellow(`I'm not in the mood to work atm. 😴`));
     await sleep(2000);

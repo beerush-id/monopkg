@@ -28,7 +28,8 @@
     "build": "rimraf dist && tsup",
     "clean": "rimraf dist",
     "format": "prettier --write ./src",
-    "prepublish": "rimraf dist && prettier --write ./src && tsup && publint",
+    "prepublish": "rimraf dist && prettier --write ./src && tsup && tar -cf ./dist/templates.tar.tgz ./templates/** && publint",
+    "add-template": "tar -cf ./dist/templates.tar.tgz ./templates/**",
     "docs:dev": "vitepress dev docs --port 3636",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
@@ -41,7 +42,8 @@
     "@clack/prompts": "^0.9.1",
     "commander": "^13.1.0",
     "esbuild-raw-plugin": "^0.1.1",
-    "glob": "^11.0.3"
+    "glob": "^11.0.3",
+    "tar": "^7.4.3"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
@@ -49,6 +51,7 @@
     "@eslint/js": "^9.18.0",
     "@nolebase/vitepress-plugin-meta": "^2.18.0",
     "@types/bun": "^1.2.0",
+    "@types/degit": "^2.8.6",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.21.0",
     "eslint": "^9.18.0",

@@ -9,5 +9,4 @@ export default defineConfig({
   format: ['esm'],
   bundle: false,
   platform: 'browser',
-  publicDir: './public',
 });
