@@ -24,12 +24,12 @@
     "dist": "dist"
   },
   "scripts": {
-    "dev": "rimraf dist && tsup --watch",
-    "build": "rimraf dist && tsup",
-    "clean": "rimraf dist",
+    "dev": "bun run clean && bun run template && tsdown --watch",
+    "build": "bun run clean && bun run template && tsdown",
+    "clean": "rimraf dist && mkdirp dist",
     "format": "prettier --write ./src",
-    "prepublish": "rimraf dist && prettier --write ./src && tsup && tar -cf ./dist/templates.tar.tgz ./templates/** && publint",
-    "add-template": "tar -cf ./dist/templates.tar.tgz ./templates/**",
+    "template": "tar -cf ./dist/templates.tar.tgz ./templates/**",
+    "prepublish": "bun run format && bun run build && publint",
     "docs:dev": "vitepress dev docs --port 3636",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
@@ -61,7 +61,7 @@
     "prettier": "^3.4.2",
     "publint": "^0.3.2",
     "rimraf": "^6.0.1",
-    "tsup": "^8.3.5",
+    "tsdown": "^0.15.9",
     "typescript": "^5.7.3",
     "vitepress": "^1.6.3"
   },
