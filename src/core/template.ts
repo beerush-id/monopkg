@@ -330,6 +330,26 @@ export const APP_TEMPLATES: PackageTemplate[] = [
     },
   },
   {
+    name: 'tsdown',
+    label: 'tsdown Project',
+    description: 'A simple project with tsdown and Typescript.',
+    setup: {
+      args: ['tsdown'],
+      exec: false,
+      pathForward: false,
+    },
+    category: 'starter',
+    setupFn: async ({ path, cwd }) => {
+      const outDir = join(cwd, path);
+      try {
+        copyDir(new URL('../templates/tsdown', import.meta.url), outDir);
+        return { name: basename(path), type: 'module' } as PackageMeta;
+      } catch (error) {
+        console.error(error);
+      }
+    },
+  },
+  {
     name: 'tsup',
     label: 'tsup Project',
     description: 'A simple project with tsup and Typescript.',
