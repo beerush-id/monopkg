@@ -56,7 +56,7 @@ const setInfoCmd = new Command()
     await runTask(
       packages.map((pkg) => {
         return {
-          title: column([grey('Setting information for'), txt(pkg.base).color(pkg.color)]),
+          title: column([grey('Setting information for'), txt(pkg.name).color(pkg.color)]),
           task: async () => {
             const logs = [];
 
@@ -96,7 +96,7 @@ const setInfoCmd = new Command()
               pkg.write();
             }
 
-            return section([column([grey('Updated information for'), txt(pkg.base).color(pkg.color)]), ...logs]);
+            return section([column([grey('Updated information for'), txt(pkg.name).color(pkg.color)]), ...logs]);
           },
         };
       })
@@ -131,7 +131,7 @@ const delInfoCmd = new Command()
     await runTask(
       packages.map((pkg) => {
         return {
-          title: column([grey('Deleting information from'), txt(pkg.base).color(pkg.color)]),
+          title: column([grey('Deleting information from'), txt(pkg.name).color(pkg.color)]),
           task: async () => {
             const logs = [];
 
@@ -144,7 +144,7 @@ const delInfoCmd = new Command()
               pkg.write();
             }
 
-            return section([column([grey('Information deleted from'), txt(pkg.base).color(pkg.color)]), ...logs]);
+            return section([column([grey('Information deleted from'), txt(pkg.name).color(pkg.color)]), ...logs]);
           },
         };
       })
@@ -243,7 +243,7 @@ const exportCmd = new Command()
 
       await runTask([
         {
-          title: inline([grey('Generating exports for '), txt(pkg.base).color(pkg.color), grey(':')]),
+          title: inline([grey('Generating exports for '), txt(pkg.name).color(pkg.color), grey(':')]),
           task: async () => {
             const outRef = options.output.replace(/^[./]+/, '');
             const outDir = `./${outRef}`;
@@ -345,11 +345,11 @@ const exportCmd = new Command()
             inline.print(txt('').lineTree());
 
             if (!infoOptions.dry) {
-              column.print([txt('Writing exports for').grey().tree(), txt(pkg.base).color(pkg.color)]);
+              column.print([txt('Writing exports for').grey().tree(), txt(pkg.name).color(pkg.color)]);
               pkg.write(true);
             }
 
-            return column([grey('Exports for'), txt(pkg.base).color(pkg.color), grey('generated!')]);
+            return column([grey('Exports for'), txt(pkg.name).color(pkg.color), grey('generated!')]);
           },
         },
       ]);

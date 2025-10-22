@@ -388,7 +388,7 @@ export async function selectPackages(library: Library, options: SelectOptions) {
       .map((pkg) => pkg.base);
   }
 
-  const workspaces = library.query({ workspace: root });
+  const workspaces = library.query({ workspace: root }).sort((a, b) => a.name.localeCompare(b.name));
 
   if (!filter.length) {
     for (const space of workspaces) {
@@ -399,7 +399,7 @@ export async function selectPackages(library: Library, options: SelectOptions) {
         })
         .map((pkg) => {
           return {
-            value: pkg.base,
+            value: pkg.name,
             label: inline([
               lightGreen(pkg.base),
               darkGrey(' '),
