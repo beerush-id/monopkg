@@ -21,6 +21,7 @@ import { xCmd } from './cli/exec.js';
 import { existsSync, readFileSync } from 'node:fs';
 import { publishCmd } from './cli/publish.js';
 import { fileURLToPath } from 'node:url';
+import { catalogCmd } from './cli/catalog.js';
 
 declare global {
   interface String {
@@ -47,6 +48,7 @@ program
 program
   .addCommand(addCmd)
   .addCommand(attachCmd)
+  .addCommand(catalogCmd)
   .addCommand(copyCmd)
   .addCommand(createCmd)
   .addCommand(detachCmd)

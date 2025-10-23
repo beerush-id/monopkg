@@ -7,6 +7,8 @@ export const DEPENDENCY_SCOPES = ['dependencies', 'devDependencies', 'peerDepend
 export type FlatRecord = Record<string, string>;
 export type Dependencies = Record<string, string>;
 export type DependencyScope = 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
+export type Catalog = Record<string, string>;
+
 export type PackageMeta = {
   type: string;
   name: string;
@@ -17,6 +19,7 @@ export type PackageMeta = {
   devDependencies: Dependencies;
   peerDependencies: Dependencies;
   optionalDependencies: Dependencies;
+  catalog?: Catalog;
 } & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
