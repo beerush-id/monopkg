@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import { addSharedOptions, caption, configs } from './program.js';
+import { addSharedOptions, caption, configs, runTask } from './program.js';
 
-import { column, section, txt } from '../utils/common.js';
+import { column, inline, section, txt } from '../utils/common.js';
 import { confirm, isCancel, select, tasks } from '@clack/prompts';
-import { grey, yellow } from '../utils/color.js';
+import { darkGrey, grey, yellow } from '../utils/color.js';
 import { library, selectPackages } from '../core/index.js';
 import { type PackageMeta, writeMeta } from '../core/meta.js';
 
@@ -56,7 +56,7 @@ export const versionCmd = new Command()
           cancelMessage: 'Version update cancelled.',
         });
 
-    if (!packages?.length) {
+    if (!packages) {
       return;
     }
 
@@ -75,30 +75,157 @@ export const versionCmd = new Command()
       }
     }
 
-    await tasks([
-      ...packages.map((pkg) => {
-        return {
-          title: column([grey('Bumping version for'), txt(pkg.base).color(pkg.color)]),
-          task: async () => {
+    await runTask([
+      {
+        title: column([grey('Bumping package versions:')]),
+        task: async () => {
+          packages.forEach((pkg) => {
             pkg.meta.version = bumpVersion(pkg.meta, version);
 
             if (!dry) {
               writeMeta(pkg.pointer.file, pkg.meta);
             }
 
-            return column([
-              grey('Package'),
-              txt(pkg.base).color(pkg.color),
-              grey('version updated to'),
+            column.print([
+              txt('Package').darkGrey().tree(),
+              txt(pkg.name).color(pkg.color),
+              darkGrey('version updated to'),
               yellow(pkg.meta.version),
             ]);
+          });
+
+          txt('').lineTree().print();
+          return column([grey('Package versions bumped.')]);
+        },
+      },
+    ]);
+
+    caption.success('Version update complete!');
+  });
+
+addSharedOptions(versionCmd);
+
+const ejectVersionCmd = new Command()
+  .configureHelp(configs)
+  .command('eject')
+  .description('Eject workspace:* version references to actual versions')
+  .option('-a, --all', 'Eject all packages')
+  .action(async () => {
+    const { dry, all } = versionCmd.opts();
+    caption.welcome('version eject!', dry);
+
+    const depTypes = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
+
+    const confirmRoot = all
+      ? true
+      : await confirm({
+          message: 'Update root package?',
+          initialValue: false,
+        });
+    const updateRoot = !isCancel(confirmRoot) && confirmRoot;
+
+    if (updateRoot) {
+      await runTask([
+        {
+          title: column([grey('Updating'), txt('root').cyan()]),
+          task: async () => {
+            for (const depType of depTypes) {
+              if (library.meta[depType]) {
+                for (const [name, version] of Object.entries(library.meta[depType])) {
+                  if (version === 'workspace:*') {
+                    const dependency = library.get(name);
+
+                    if (dependency) {
+                      library.meta[depType][name] = `^${dependency.version}`;
+
+                      column.print([
+                        txt(`${depType}:`).darkGrey().tree(),
+                        inline([txt(name).cyan(), txt('@').darkGrey(), txt('workspace:*').red()]),
+                        txt('->').darkGrey(),
+                        inline([txt(name).cyan(), txt('@').darkGrey(), txt(`^${dependency.version}`).yellow()]),
+                      ]);
+                    }
+                  }
+                }
+              }
+            }
+
+            if (!dry) {
+              library.write();
+            }
+
+            txt('').lineTree().print();
+            return column([txt('Root').cyan(), darkGrey('package versions ejected')]);
+          },
+        },
+      ]);
+    }
+
+    const packages = all
+      ? library.packages
+      : await selectPackages(library, {
+          ...versionCmd.opts(),
+          subTitle: 'eject workspace versions from',
+          cancelMessage: 'Version eject cancelled.',
+        });
+
+    if (!packages) {
+      return;
+    }
+
+    await runTask([
+      ...packages.map((pkg) => {
+        return {
+          title: column([grey('Ejecting workspace versions for'), txt(pkg.name).color(pkg.color)]),
+          task: async () => {
+            let updated = false;
+
+            for (const depType of depTypes) {
+              if (pkg.meta[depType]) {
+                for (const [name, version] of Object.entries(pkg.meta[depType])) {
+                  if (version === 'workspace:*') {
+                    const dependency = library.get(name);
+                    if (dependency) {
+                      pkg.meta[depType][name] = `^${dependency.version}`;
+                      updated = true;
+
+                      column.print([
+                        txt(`${depType}:`).darkGrey().tree(),
+                        inline([txt(name).color(pkg.color), txt('@').darkGrey(), txt('workspace:*').red()]),
+                        txt('->').darkGrey(),
+                        inline([
+                          txt(name).color(pkg.color),
+                          txt('@').darkGrey(),
+                          txt(`^${dependency.version}`).green(),
+                        ]),
+                      ]);
+                    }
+                  }
+                }
+              }
+            }
+
+            if (updated && !dry) {
+              writeMeta(pkg.pointer.file, pkg.meta);
+            }
+
+            if (!updated) {
+              return column([grey('No workspace versions found in'), txt(pkg.name).color(pkg.color)]);
+            }
+
+            inline.print([txt('').lineTree()]);
+            return column([grey('Ejected workspace versions for'), txt(pkg.name).color(pkg.color)]);
           },
         };
       }),
     ]);
 
-    caption.success('Version update complete!');
+    caption.success('Workspace versions ejected successfully!');
   });
+
+addSharedOptions(ejectVersionCmd);
+
+versionCmd.addCommand(ejectVersionCmd);
 
 function bumpVersion(meta: PackageMeta, version: string = '') {
   if (['major', 'minor', 'patch'].includes(version)) {
@@ -129,5 +256,3 @@ function bumpVersion(meta: PackageMeta, version: string = '') {
     return version || '0.0.1';
   }
 }
-
-addSharedOptions(versionCmd);
