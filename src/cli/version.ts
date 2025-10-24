@@ -5,14 +5,14 @@ import { column, section, txt } from '../utils/common.js';
 import { confirm, isCancel, select, tasks } from '@clack/prompts';
 import { grey, yellow } from '../utils/color.js';
 import { library, selectPackages } from '../core/index.js';
-import { writeMeta } from '../core/meta.js';
+import { type PackageMeta, writeMeta } from '../core/meta.js';
 
 export const versionCmd = new Command()
   .configureHelp(configs)
   .command('version [version]')
   .description('Bump or set package version (default: patch)')
   .option('-a, --all', 'Update everything including the root package')
-  .action(async (version: string) => {
+  .action(async (version: string = 'patch') => {
     const { dry, all } = versionCmd.opts();
     caption.welcome('version wizard!', dry);
 
@@ -31,7 +31,7 @@ export const versionCmd = new Command()
         {
           title: column([grey('Updating'), txt('root').cyan()]),
           task: async () => {
-            library.meta.version = version ?? '0.0.1';
+            library.meta.version = bumpVersion(library.meta, version);
 
             if (!dry) {
               library.write();
@@ -80,25 +80,7 @@ export const versionCmd = new Command()
         return {
           title: column([grey('Bumping version for'), txt(pkg.base).color(pkg.color)]),
           task: async () => {
-            if (['major', 'minor', 'patch'].includes(version)) {
-              let [major = '0', minor = '0', patch = '1'] = (pkg.version ?? '0.0.1').split('.');
-              if (version === 'major') {
-                major = (+major + 1).toString();
-                minor = '0';
-                patch = '0';
-              } else if (version === 'minor') {
-                minor = (+minor + 1).toString();
-                patch = '0';
-              } else if (version === 'patch') {
-                patch = (+patch + 1).toString();
-              } else if (version.match(/^\d+\.\d+\.\d+$/)) {
-                [major, minor, patch] = version.split('.');
-              }
-
-              pkg.meta.version = `${major}.${minor}.${patch}`;
-            } else {
-              pkg.meta.version = version ?? '0.0.1';
-            }
+            pkg.meta.version = bumpVersion(pkg.meta, version);
 
             if (!dry) {
               writeMeta(pkg.pointer.file, pkg.meta);
@@ -117,5 +99,35 @@ export const versionCmd = new Command()
 
     caption.success('Version update complete!');
   });
+
+function bumpVersion(meta: PackageMeta, version: string = '') {
+  if (['major', 'minor', 'patch'].includes(version)) {
+    const [, major = '0', minor = '0'] = (meta.version ?? '0.0.1').match(/(\d+)\.(\d+)\.(\d+)/) ?? ['0', '0', '1'];
+    const [patch] = meta.version.match(/\d+$/) ?? '1';
+
+    let nextMajor = major;
+    let nextMinor = minor;
+    let nextPatch = patch;
+
+    if (version === 'major') {
+      nextMajor = (+major + 1).toString();
+      nextMinor = '0';
+      nextPatch = '0';
+    } else if (version === 'minor') {
+      nextMinor = (+minor + 1).toString();
+      nextPatch = '0';
+    } else if (version === 'patch') {
+      nextPatch = (+patch + 1).toString();
+    }
+
+    if (version === 'major' || version === 'minor') {
+      return `${nextMajor}.${nextMinor}.${nextPatch}`;
+    }
+
+    return meta.version.replace(`${major}.${minor}.${patch}`, `${nextMajor}.${nextMinor}.${nextPatch}`);
+  } else {
+    return version || '0.0.1';
+  }
+}
 
 addSharedOptions(versionCmd);
