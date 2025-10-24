@@ -832,96 +832,186 @@ async function useCatalog(packages: string[], options: UseOptions) {
   }
 
   // If no packages provided or interactive mode, let user select from catalog
-  let selectedPackages: string[] = [];
+  let selectedPackages: CatalogPackage[] = [];
   if (packages.length === 0) {
-    // Collect all available packages from all catalogs
-    let allCatalogEntries: [string, string, string][] = []; // [packageName, version, catalogName]
+    // NEW APPROACH: Pick from each catalog separately instead of merging all catalogs
+    if (selectedCatalog) {
+      // If a specific catalog is selected, use the existing logic for that catalog only
+      const catalogEntries = Object.entries(selectedCatalog);
 
-    // Add global catalog entries
-    const globalEntries = Object.entries(globalCatalog);
-    for (const [name, version] of globalEntries) {
-      allCatalogEntries.push([name, version, 'global']);
-    }
-
-    // Add group catalog entries
-    for (const [groupName, groupCatalog] of Object.entries(catalogs)) {
-      const groupEntries = Object.entries(groupCatalog as Record<string, string>);
-      for (const [name, version] of groupEntries) {
-        allCatalogEntries.push([name, version, groupName]);
-      }
-    }
-
-    if (allCatalogEntries.length === 0) {
-      caption.cancel('Catalogs are empty. Add packages to catalog first.');
-      return;
-    }
-
-    // If a specific catalog is selected, filter entries
-    if (selectedCatalogName !== null) {
-      allCatalogEntries = allCatalogEntries.filter(([, , catalogName]) =>
-        selectedCatalogName === '' ? catalogName === 'global' : catalogName === selectedCatalogName
-      );
-
-      if (allCatalogEntries.length === 0) {
+      if (catalogEntries.length === 0) {
         caption.cancel(`Selected catalog '${selectedCatalogName || 'global'}' is empty.`);
         return;
       }
-    }
 
-    // Sort catalog entries alphabetically
-    allCatalogEntries.sort((a, b) => a[0].localeCompare(b[0]));
+      // Sort catalog entries alphabetically
+      catalogEntries.sort((a, b) => a[0].localeCompare(b[0]));
 
-    // Create options with catalog information
-    const packageOptions = allCatalogEntries.map(([name, version, catalogName]) => ({
-      value: name,
-      label: inline([
-        txt(name).cyan(),
-        txt('@').darkGrey(),
-        txt(version).yellow(),
-        txt(` (${catalogName === 'global' ? 'global' : catalogName})`).darkGrey(),
-      ]),
-    }));
+      // Create options with catalog information
+      const packageOptions = catalogEntries.map(([name, version]) => ({
+        value: name,
+        label: inline([txt(name).cyan(), txt('@').darkGrey(), txt(version).yellow()]),
+      }));
 
-    const result = await multiselect({
-      message: grey('Select packages from catalog:'),
-      options: [{ value: 'all', label: 'All packages' }, ...packageOptions],
-      required: true,
-    });
+      const result = await multiselect({
+        message: grey(`Select packages from ${selectedCatalogName || 'global'} catalog:`),
+        options: [{ value: 'all', label: 'All packages' }, ...packageOptions],
+        required: true,
+      });
 
-    if (isCancel(result)) {
-      caption.cancel('Operation cancelled.');
-      return;
-    }
-
-    // Handle "all" selection
-    if ((result as string[]).includes('all')) {
-      selectedPackages = allCatalogEntries.map(([name]) => name);
-    } else {
-      selectedPackages = result as string[];
-    }
-  } else {
-    // Validate that all packages exist in at least one catalog
-    const missingPackages: string[] = [];
-
-    for (const pkg of packages) {
-      let found = false;
-
-      // Check global catalog
-      if (globalCatalog[pkg]) {
-        found = true;
+      if (isCancel(result)) {
+        caption.cancel('Operation cancelled.');
+        return;
       }
 
-      // Check group catalogs
-      if (!found) {
-        for (const groupCatalog of Object.values(catalogs)) {
-          if ((groupCatalog as Record<string, string>)[pkg]) {
-            found = true;
-            break;
+      // Handle "all" selection
+      if ((result as string[]).includes('all')) {
+        selectedPackages = catalogEntries.map(([name, version]) => ({
+          name,
+          version,
+          catalog: selectedCatalogName || 'global',
+        }));
+      } else {
+        selectedPackages = (result as string[]).map((name) => ({
+          name,
+          version: selectedCatalog![name],
+          catalog: selectedCatalogName || 'global',
+        }));
+      }
+    } else {
+      // NEW: When no specific catalog is selected, prompt for each catalog separately
+
+      // First, check if there are any packages in catalogs
+      const hasGlobalPackages = Object.keys(globalCatalog).length > 0;
+      const hasGroupPackages = Object.values(catalogs).some(
+        (group) => Object.keys(group as Record<string, string>).length > 0
+      );
+
+      if (!hasGlobalPackages && !hasGroupPackages) {
+        caption.cancel('Catalogs are empty. Add packages to catalog first.');
+        return;
+      }
+
+      // Collect packages from global catalog first
+      if (hasGlobalPackages) {
+        const globalEntries = Object.entries(globalCatalog);
+        globalEntries.sort((a, b) => a[0].localeCompare(b[0]));
+
+        const globalOptions = globalEntries.map(([name, version]) => ({
+          value: name,
+          label: inline([txt(name).cyan(), txt('@').darkGrey(), txt(version).yellow()]),
+        }));
+
+        const globalResult = await multiselect({
+          message: grey('Select packages from global catalog:'),
+          options: [{ value: 'all', label: 'All packages' }, ...globalOptions],
+          required: false,
+        });
+
+        if (isCancel(globalResult)) {
+          caption.cancel('Operation cancelled.');
+          return;
+        }
+
+        if ((globalResult as string[]).includes('all')) {
+          selectedPackages.push(
+            ...globalEntries.map(([name, version]) => ({
+              name,
+              version,
+              catalog: 'global',
+            }))
+          );
+        } else if (Array.isArray(globalResult)) {
+          selectedPackages.push(
+            ...(globalResult as string[]).map((name) => ({
+              name,
+              version: globalCatalog[name],
+              catalog: 'global',
+            }))
+          );
+        }
+      }
+
+      // Then collect packages from each group catalog
+      for (const [groupName, groupCatalog] of Object.entries(catalogs)) {
+        const groupCatalogTyped = groupCatalog as Record<string, string>;
+        const groupEntries = Object.entries(groupCatalogTyped);
+
+        if (groupEntries.length > 0) {
+          groupEntries.sort((a, b) => a[0].localeCompare(b[0]));
+
+          const groupOptions = groupEntries.map(([name, version]) => ({
+            value: name,
+            label: inline([txt(name).cyan(), txt('@').darkGrey(), txt(version).yellow()]),
+          }));
+
+          const groupResult = await multiselect({
+            message: grey(`Select packages from '${groupName}' catalog:`),
+            options: [{ value: 'all', label: 'All packages' }, ...groupOptions],
+            required: false,
+          });
+
+          if (isCancel(groupResult)) {
+            caption.cancel('Operation cancelled.');
+            return;
+          }
+
+          if ((groupResult as string[]).includes('all')) {
+            selectedPackages.push(
+              ...groupEntries.map(([name, version]) => ({
+                name,
+                version,
+                catalog: groupName,
+              }))
+            );
+          } else if (Array.isArray(groupResult)) {
+            selectedPackages.push(
+              ...(groupResult as string[]).map((name) => {
+                const version = groupCatalogTyped[name];
+                return {
+                  name,
+                  version,
+                  catalog: groupName,
+                };
+              })
+            );
           }
         }
       }
 
-      if (!found) {
+      // Check if any packages were selected
+      if (selectedPackages.length === 0) {
+        caption.cancel('No packages selected.');
+        return;
+      }
+    }
+  } else {
+    // Create a map of all packages with their catalogs
+    const packageMap: Map<string, CatalogPackage[]> = new Map();
+
+    // Add global catalog packages
+    Object.entries(globalCatalog).forEach(([name, version]) => {
+      if (!packageMap.has(name)) {
+        packageMap.set(name, []);
+      }
+      packageMap.get(name)!.push({ name, version, catalog: 'global' });
+    });
+
+    // Add group catalog packages
+    Object.entries(catalogs).forEach(([groupName, groupCatalog]) => {
+      const groupCatalogTyped = groupCatalog as Record<string, string>;
+      Object.entries(groupCatalogTyped).forEach(([name, version]) => {
+        if (!packageMap.has(name)) {
+          packageMap.set(name, []);
+        }
+        packageMap.get(name)!.push({ name, version, catalog: groupName });
+      });
+    });
+
+    // Check if all requested packages exist
+    const missingPackages: string[] = [];
+    for (const pkg of packages) {
+      if (!packageMap.has(pkg)) {
         missingPackages.push(pkg);
       }
     }
@@ -932,7 +1022,41 @@ async function useCatalog(packages: string[], options: UseOptions) {
       caption.cancel('Some packages are not in any catalog.');
       return;
     }
-    selectedPackages = packages;
+
+    // For each requested package, add it to selectedPackages
+    // If it exists in multiple catalogs, prompt user to select which one
+    for (const pkgName of packages) {
+      const pkgOptions = packageMap.get(pkgName)!;
+      if (pkgOptions.length === 1) {
+        // Only exists in one catalog
+        selectedPackages.push(pkgOptions[0]);
+      } else {
+        // Exists in multiple catalogs, prompt user to select
+        const options = pkgOptions.map((pkgInfo) => ({
+          value: JSON.stringify(pkgInfo),
+          label: inline([
+            txt(pkgInfo.name).cyan(),
+            txt('@').darkGrey(),
+            txt(pkgInfo.version).yellow(),
+            txt(' (').darkGrey(),
+            txt(pkgInfo.catalog === 'global' ? 'global' : `catalog:${pkgInfo.catalog}`).green(),
+            txt(')').darkGrey(),
+          ]),
+        }));
+
+        const result = await select({
+          message: grey(`Select catalog for '${pkgName}':`),
+          options,
+        });
+
+        if (isCancel(result)) {
+          caption.cancel('Operation cancelled.');
+          return;
+        }
+
+        selectedPackages.push(JSON.parse(result as string));
+      }
+    }
   }
 
   // Select target packages to update
@@ -944,46 +1068,24 @@ async function useCatalog(packages: string[], options: UseOptions) {
     targetPackages.map((pkg) => {
       return {
         title: column([grey('Updating the'), txt(pkg.name).color(pkg.color), grey('package to use catalog versions:')]),
-        message: column([grey('Used packages:'), ...selectedPackages.map((name) => txt(name).green())]),
+        message: column([grey('Used packages:'), ...selectedPackages.map((pkgInfo) => txt(pkgInfo.name).green())]),
         task: async () => {
           // Check all dependency types
           const depTypes = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
 
-          for (const depName of selectedPackages) {
-            let hasUpdates = false;
-
+          for (const pkgInfo of selectedPackages) {
+            const { name: depName, catalog } = pkgInfo;
             // Determine which catalog this package belongs to
             let catalogReference = 'catalog:';
-            let version = 'latest';
-
-            if (selectedCatalog && selectedCatalog[depName]) {
-              // Using the specifically selected catalog
-              version = selectedCatalog[depName];
-              if (selectedCatalogName) {
-                catalogReference = `catalog:${selectedCatalogName}`;
-              }
-            } else {
-              // Find which catalog contains this package
-              if (globalCatalog[depName]) {
-                version = globalCatalog[depName];
-                catalogReference = 'catalog:';
-              } else {
-                // Check group catalogs
-                for (const [groupName, groupCatalog] of Object.entries(catalogs)) {
-                  if ((groupCatalog as Record<string, string>)[depName]) {
-                    version = (groupCatalog as Record<string, string>)[depName];
-                    catalogReference = `catalog:${groupName}`;
-                    break;
-                  }
-                }
-              }
+            if (catalog !== 'global') {
+              catalogReference = `catalog:${catalog}`;
             }
 
             for (const depType of depTypes) {
               if (pkg.meta[depType]) {
                 if (pkg.meta[depType][depName]) {
                   const oldVersion = pkg.meta[depType][depName];
-                  pkg.meta[depType][depName] = catalogReference;
+                  pkg.set(`${depType}.${depName}`, catalogReference);
 
                   column.print([
                     txt(`${depType}:`).darkGrey().tree(),
@@ -993,27 +1095,16 @@ async function useCatalog(packages: string[], options: UseOptions) {
                       txt(depName).color(pkg.color),
                       txt('@').darkGrey(),
                       txt(catalogReference).yellow(),
-                      txt(version).darkGrey(),
+                      txt(pkgInfo.version).darkGrey(),
                     ]),
                   ]);
-
-                  hasUpdates = true;
                 }
               }
-            }
-
-            if (!hasUpdates) {
-              column.print([
-                txt('Package').darkGrey().tree(),
-                txt(depName).green(),
-                txt('is not being used in the').darkGrey(),
-                txt(pkg.name).color(pkg.color),
-                txt('package.').darkGrey(),
-              ]);
             }
           }
 
           if (!options.dry) {
+            inline.print('Package written.');
             pkg.write();
           }
 
@@ -1044,6 +1135,12 @@ async function selectTargetPackages(options: UseOptions): Promise<Package[] | vo
 
   return packages;
 }
+
+type CatalogPackage = {
+  name: string;
+  version: string;
+  catalog: string;
+};
 
 // Add this helper function to fetch package info from npm
 function fetchPackageInfo(packageName: string): Promise<{ version: string }> {
