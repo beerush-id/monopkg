@@ -33,9 +33,14 @@ export const publishCmd = new Command()
             const cwd = join(library.path, pkg.path);
 
             if (!dry) {
-              await exec('npm', ['publish'], { cwd });
+              await exec(library.pm, ['publish'], { cwd });
+            } else if (library.dryCmd) {
+              await exec(library.pm, ['publish', library.dryCmd], { cwd });
+            } else {
+              column.print([txt(library.pm).cyan().tree(), txt('publish').yellow()]);
             }
 
+            txt('').lineTree().print();
             return column([green('Package'), txt(pkg.base).color(pkg.color), green('published successfully!')]);
           },
         };

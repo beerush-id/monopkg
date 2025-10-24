@@ -36,6 +36,11 @@ export class Library {
     return pm.includes('yarn') ? 'yarn' : pm.includes('pnpm') ? 'pnpm' : pm.includes('bun') ? 'bun' : 'npm';
   }
 
+  public get dryCmd() {
+    const pm = this.meta.packageManager ?? 'npm';
+    return ['bun', 'npm'].some((name) => pm.includes(name)) ? '--dry-run' : null;
+  }
+
   public get name() {
     return this.meta.name;
   }
