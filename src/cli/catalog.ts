@@ -9,7 +9,7 @@ import {
   runTask,
 } from './program.js';
 import { column, inline, section, txt } from '../utils/common.js';
-import { isCancel, multiselect, select } from '@clack/prompts';
+import { confirm, isCancel, multiselect, select } from '@clack/prompts';
 import { grey } from '../utils/color.js';
 import { library, Package, selectPackages } from '../core/index.js';
 
@@ -383,14 +383,6 @@ async function addToCatalog(packages: string[], options: CatalogOptions) {
   }
 
   caption.success(`Packages added to ${catalogName} catalog`);
-}
-
-// Simple version comparison (in a real implementation, you might want to use a proper semver library)
-function compareVersions(version1: string, version2: string): number {
-  // For now, we'll just do a simple string comparison
-  // In a real implementation, you'd want to use semver comparison
-  if (version1 === version2) return 0;
-  return version1 > version2 ? 1 : -1;
 }
 
 async function removeFromCatalog(packages: string[], options: CatalogOptions) {
@@ -1059,6 +1051,60 @@ async function useCatalog(packages: string[], options: UseOptions) {
     }
   }
 
+  const depTypes = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
+
+  const confirmRoot = await confirm({
+    message: grey(`Use in the root package.json?`),
+    initialValue: false,
+  });
+  const updateRoot = !isCancel(confirmRoot);
+
+  if (updateRoot) {
+    await runTask([
+      {
+        title: column([grey('Updating the'), txt('root').cyan(), grey('package to use catalog versions:')]),
+        task: async () => {
+          for (const pkgInfo of selectedPackages) {
+            const { name: depName, catalog } = pkgInfo;
+            let catalogReference = 'catalog:';
+
+            if (catalog !== 'global') {
+              catalogReference = `catalog:${catalog}`;
+            }
+
+            for (const depType of depTypes) {
+              if (!library.meta[depType]) continue;
+
+              if (library.meta[depType][depName]) {
+                const oldVersion = library.meta[depType][depName];
+                library.meta[depType][depName] = catalogReference;
+
+                column.print([
+                  txt(`${depType}:`).darkGrey().tree(),
+                  inline([txt(depName).cyan(), txt('@').darkGrey(), txt(oldVersion).red()]),
+                  txt('->').darkGrey(),
+                  inline([
+                    txt(depName).cyan(),
+                    txt('@').darkGrey(),
+                    txt(catalogReference).yellow(),
+                    txt(pkgInfo.version).darkGrey(),
+                  ]),
+                ]);
+              }
+            }
+          }
+
+          if (!options.dry) {
+            library.write();
+          }
+
+          inline.print(txt('').lineTree());
+          return column([grey('Updated the'), txt('root').cyan(), grey('package to use catalog versions.')]);
+        },
+      },
+    ]);
+  }
+
   // Select target packages to update
   const targetPackages = await selectTargetPackages(options);
   if (!targetPackages) return;
@@ -1068,11 +1114,7 @@ async function useCatalog(packages: string[], options: UseOptions) {
     targetPackages.map((pkg) => {
       return {
         title: column([grey('Updating the'), txt(pkg.name).color(pkg.color), grey('package to use catalog versions:')]),
-        message: column([grey('Used packages:'), ...selectedPackages.map((pkgInfo) => txt(pkgInfo.name).green())]),
         task: async () => {
-          // Check all dependency types
-          const depTypes = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
-
           for (const pkgInfo of selectedPackages) {
             const { name: depName, catalog } = pkgInfo;
             // Determine which catalog this package belongs to
@@ -1104,10 +1146,10 @@ async function useCatalog(packages: string[], options: UseOptions) {
           }
 
           if (!options.dry) {
-            inline.print('Package written.');
             pkg.write();
           }
 
+          inline.print(txt('').lineTree());
           return column([
             grey('Updated the'),
             txt(pkg.name).color(pkg.color),
@@ -1219,4 +1261,12 @@ async function parsePackage(pkg: string): Promise<{ name: string; version: strin
   }
 
   return { name, version };
+}
+
+// Simple version comparison (in a real implementation, you might want to use a proper semver library)
+function compareVersions(version1: string, version2: string): number {
+  // For now, we'll just do a simple string comparison
+  // In a real implementation, you'd want to use semver comparison
+  if (version1 === version2) return 0;
+  return version1 > version2 ? 1 : -1;
 }
