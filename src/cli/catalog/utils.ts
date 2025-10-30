@@ -9,6 +9,10 @@ export type CatalogOptions = OverrideOptions & {
 };
 export type UseOptions = FilterOptions & {
   catalog?: string;
+  save?: boolean;
+  dev?: boolean;
+  optional?: boolean;
+  peer?: boolean;
 };
 export type CatalogPackage = {
   name: string;

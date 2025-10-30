@@ -77,8 +77,11 @@ catalogCmd.addCommand(renameCmd);
 const useCmd = new Command()
   .command('use [packages...]')
   .description('Use catalog versions in packages')
-  .option('-i, --interactive', 'Interactive mode')
   .option('-c, --catalog <name>', 'Use specific catalog group')
+  .option('-s, --save', 'Use as dependencies')
+  .option('-d, --dev', 'Use as devDependencies')
+  .option('-o, --optional', 'Use as optionalDependencies')
+  .option('-p, --peer', 'Use as peerDependencies')
   .action(async (packages: string[]) => {
     await useCatalog(packages, useCmd.opts());
   });
