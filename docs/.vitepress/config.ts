@@ -114,6 +114,20 @@ export default defineConfig({
             ],
           },
           {
+            text: 'Catalog',
+            collapsed: true,
+            items: [
+              { text: 'Manage Catalogs', link: '/guides/catalog' },
+              { text: 'Add to Catalog', link: '/guides/catalog-add' },
+              { text: 'Create Catalog', link: '/guides/catalog-create' },
+              { text: 'Delete Catalog', link: '/guides/catalog-delete' },
+              { text: 'Eject Catalog', link: '/guides/catalog-eject' },
+              { text: 'Remove from Catalog', link: '/guides/catalog-remove' },
+              { text: 'Rename Catalog', link: '/guides/catalog-rename' },
+              { text: 'Use Catalog', link: '/guides/catalog-use' },
+            ],
+          },
+          {
             text: 'Utilities',
             collapsed: true,
             items: [

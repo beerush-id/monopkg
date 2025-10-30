@@ -1,9 +1,8 @@
 # Welcome to MonoPKG
 
 **MonoPKG** is an interactive CLI tool for managing monorepos effortlessly. It offers a suite of commands to handle
-`workspaces`, `packages`, `dependencies`, `scripts`, and `package versions` within a monorepo, making your development
-process
-smoother and more efficient. If you enjoy doing everything manually, skip it! It's not for you. 😅
+`workspaces`, `packages`, `dependencies`, `scripts`, `package versions`, and `package catalogs` within a monorepo, making your development
+process smoother and more efficient. If you enjoy doing everything manually, skip it! It's not for you. 😅
 
 ![MonoPKG](/overview.jpg)
 
@@ -104,6 +103,26 @@ It's a ninja move! 🥷
   }
 }
 ```
+
+:::
+
+### Managing Package Versions with Catalogs
+
+Keeping consistent versions of dependencies across multiple packages can be challenging. MonoPKG's catalog feature allows you to define package versions centrally and reference them across your packages, ensuring consistency and simplifying updates.
+
+::: warning
+The catalog feature is only supported on **Bun v1.3.0 or higher**. Other package managers do not currently support this feature.
+:::
+
+::: info
+With catalogs, you define versions once and reference them everywhere, making it easy to update packages across your entire monorepo with a single change.
+
+```sh
+monopkg catalog add react@18.2.0 lodash@4.17.21 --global
+monopkg catalog use react lodash -s
+```
+
+The above commands add `react` and `lodash` to the global catalog and then use those versions in packages. When you need to update, you only change the catalog, not each package individually.
 
 :::
 

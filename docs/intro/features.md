@@ -100,6 +100,45 @@ My brain is currently on a coffee break. ☕️ Please hold while it recharges..
 
 [Learn more about managing package versions with MonoPKG](../guides/version.md)
 
+## Catalog Management
+
+Manage package versions centrally with catalogs. Define versions once and reference them across all your packages, ensuring consistency and simplifying updates.
+
+::: warning
+The catalog feature is only supported on **Bun v1.3.0 or higher**. Other package managers do not currently support this feature.
+:::
+
+![Catalog Management](/overview.jpg)
+
+::: info CENTRALIZE YOUR VERSIONS
+
+Instead of managing versions in each package.json, define them once in catalogs and reference them everywhere:
+
+```json
+{
+  "dependencies": {
+    "react": "catalog:",
+    "lodash": "catalog:frontend"
+  }
+}
+```
+
+When you need to update a package version, you only need to change it in the catalog, not in every package.
+
+::: tip Example
+
+```sh
+monopkg catalog add react@18.2.0 --global
+monopkg catalog add lodash@4.17.21 -c frontend
+monopkg catalog use react lodash -s
+```
+
+The above commands add packages to catalogs and then use those versions in your packages. Updating is as simple as changing the catalog entry.
+
+:::
+
+[Learn more about managing catalogs with MonoPKG](../guides/catalog.md)
+
 ## Workspace Management
 
 Manage workspaces and packages within your monorepo with ease. Create, update, and delete workspaces effortlessly. Initialize new workspaces or migrate existing ones with a simple command.
