@@ -4,7 +4,7 @@ import process from 'node:process';
 
 export const PKG_QUERY_OPTIONS = ['filter', 'exclude', 'private', 'public', 'restricted', 'publishable'];
 export const BASE_COLOR = 200;
-export const RESOLVE_TIMEOUT = process.argv.includes('--sequential') ? 0 : 2500; // 2.5s
+export const RESOLVE_TIMEOUT = process.argv.includes('--sequential') ? 0 : 60000; // 2.5s
 
 export type QueryOptions = {
   workspace?: string[];
