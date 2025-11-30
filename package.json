@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "monopkg",
-  "version": "0.4.1",
+  "version": "0.4.3",
   "description": "A simple, yet beautiful monorepo package manager.",
   "module": "dist/index.js",
   "exports": {
@@ -29,7 +29,7 @@
     "clean": "rimraf dist && mkdirp dist",
     "format": "prettier --write ./src",
     "template": "tar -cf ./dist/templates.tar.tgz ./templates/**",
-    "prepublish": "bun run format && bun run build && publint",
+    "prepublish": "bun run format && bun run build && bun run template && publint",
     "docs:dev": "vitepress dev docs --port 3636",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
