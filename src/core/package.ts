@@ -476,8 +476,6 @@ export async function execScript({
   let resolved = false;
   const startTime = Date.now();
 
-  console.log(timeout);
-
   return new Promise((resolve) => {
     const resolveQueue = () => {
       clearTimeout(debounce);
