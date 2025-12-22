@@ -79,7 +79,25 @@ export function writeMeta(path: string, meta: PackageMeta, cwd?: string) {
   }
 
   try {
-    const pkgInfo = JSON.stringify(meta, null, 2);
+    const targetMeta = { ...meta };
+
+    // Sort dependencies
+    for (const key of DEPENDENCY_SCOPES) {
+      const props = targetMeta[key];
+
+      if (typeof props === 'object' && props !== null) {
+        const newProps = {};
+        const keys = Object.keys(props).sort((a, b) => a.localeCompare(b));
+
+        for (const key of keys) {
+          newProps[key as never] = props[key] as never;
+        }
+
+        targetMeta[key] = newProps;
+      }
+    }
+
+    const pkgInfo = JSON.stringify(targetMeta, null, 2);
 
     return writeFileSync(path, pkgInfo, 'utf-8');
   } catch (error) {

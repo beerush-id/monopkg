@@ -361,6 +361,47 @@ const exportCmd = new Command()
 addSharedOptions(exportCmd);
 infoCmd.addCommand(exportCmd);
 
+const sortDepCmd = new Command()
+  .configureHelp(configs)
+  .command('sort-deps')
+  .usage('[options]')
+  .summary('Sort dependencies in package.json')
+  .action(async () => {
+    const infoOptions = infoCmd.opts<FilterOptions>();
+
+    caption.welcome('exports generator!', infoOptions.dry);
+
+    const packages = await selectPackages(library, {
+      ...infoOptions,
+      subTitle: 'generate exports for',
+      cancelMessage: 'Exports generation cancelled!',
+    });
+
+    if (!packages) {
+      return;
+    }
+
+    await runTask([
+      {
+        title: inline([grey('Sorting dependencies for '), txt(packages[0].name).color(packages[0].color), grey(':')]),
+        task: async () => {
+          for (const pkg of packages) {
+            if (!infoOptions.dry) {
+              pkg.write(true);
+            }
+
+            column.print([txt('Package dependencies sorted').grey().tree(), txt(pkg.name).color(pkg.color)]);
+          }
+        },
+      },
+    ]);
+
+    caption.success('Dependencies sorted!');
+  });
+
+addSharedOptions(sortDepCmd);
+infoCmd.addCommand(sortDepCmd);
+
 export const printInfos = (keys: string[], options: QueryOptions) => {
   const workspaces = library.query({ ...options });
 
